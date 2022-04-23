@@ -5,7 +5,10 @@ const path = require("path");
 const session = require("express-session");
 const dotenv = require("dotenv");
 dotenv.config();
+
 const indexRouter = require("./routes/index");
+const userRouter = require("./routes/user");
+
 const { sequelize } = require("./models");
 
 const app = express();
@@ -36,7 +39,9 @@ app.use(
   })
 );
 
+// routes
 app.use("/", indexRouter);
+app.use("/users", userRouter);
 
 app.use((req, res, next) => {
   const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);

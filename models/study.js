@@ -1,4 +1,4 @@
-const Sequelize = require("sequelize");
+const Sequelize = require('sequelize');
 
 module.exports = class Study extends Sequelize.Model {
   static init(sequelize) {
@@ -13,17 +13,17 @@ module.exports = class Study extends Sequelize.Model {
         category_id: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: "category",
-            key: "id",
+            model: 'category',
+            key: 'id',
           },
-          onDelete: "CASCADE",
+          onDelete: 'CASCADE',
         },
         name: {
-          type: "varchar(45)",
+          type: 'varchar(45)',
           allowNull: false,
         },
         info: {
-          type: "longtext",
+          type: 'longtext',
           allowNull: false,
         },
         meeting_cnt: {
@@ -43,11 +43,11 @@ module.exports = class Study extends Sequelize.Model {
           allowNull: false,
         },
         location: {
-          type: "varchar(255)",
+          type: 'varchar(255)',
           allowNull: false,
         },
         operation_time: {
-          type: "varchar(255)",
+          type: 'varchar(255)',
           allowNull: false,
         },
         min_person: {
@@ -67,36 +67,36 @@ module.exports = class Study extends Sequelize.Model {
           allowNull: false,
         },
         src: {
-          type: "varchar(255)",
-          allowNull: false,
+          type: 'varchar(255)',
+          allowNull: true,
         },
       },
       {
         sequelize,
         timestamps: true,
         underscored: true,
-        modelName: "Study",
-        tableName: "study",
+        modelName: 'Study',
+        tableName: 'study',
         paranoid: true,
-        charset: "utf8",
-        collate: "utf8_general_ci",
-      }
+        charset: 'utf8',
+        collate: 'utf8_general_ci',
+      },
     );
   }
 
   static associate(db) {
     db.Study.hasMany(db.StudyMember, {
-      foreignKey: "study_id",
+      foreignKey: 'study_id',
     });
     db.Study.hasMany(db.Comment, {
-      foreignKey: "study_id",
+      foreignKey: 'study_id',
     });
     db.Study.hasMany(db.Reservation, {
-      foreignKey: "study_id",
+      foreignKey: 'study_id',
     });
     db.Study.belongsTo(db.Category, {
-      foreignKey: "category_id",
-      onDelete: "CASCADE",
+      foreignKey: 'category_id',
+      onDelete: 'CASCADE',
     });
   }
 };

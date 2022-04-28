@@ -5,14 +5,14 @@ const { User } = require('../models')
 /* GET */
 // 회원 정보 조회
 router.get('/', async (req, res, next) => {
-  const id = null; // from user session
-  res.send(await User.findOne({ where: id }));
+  const id = 1; // from user session
+  res.send(await User.findOne({ where: { id } }));
 });
 // login
 router.get('/login', async (req, res, next) => {
   const pid = null; // from user session
   try {
-    const data = await User.findOne({ where: pid });
+    const data = await User.findOne({ where: { pid } });
     res.send(data);
   } catch (e) {
     res.send("error");
@@ -35,7 +35,7 @@ router.post('/', async (req, res, next) => {
 router.patch('/', async (req, res, next) => {
   const id = null; // from user session
   try {
-    await User.update(req.body, { where: id });
+    await User.update(req.body, { where: { id } });
     res.send("success");
   } catch (e) {
     res.send("error");
@@ -47,7 +47,7 @@ router.patch('/', async (req, res, next) => {
 router.delete('/', async (req, res, next) => {
   const id = null; // from user session
   try {
-    await User.destroy({ where: id });
+    await User.destroy({ where: { id } });
     res.send("success");
   } catch (e) {
     res.send("error");

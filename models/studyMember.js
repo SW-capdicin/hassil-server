@@ -1,4 +1,4 @@
-const Sequelize = require("sequelize");
+const Sequelize = require('sequelize');
 
 module.exports = class StudyMember extends Sequelize.Model {
   static init(sequelize) {
@@ -7,24 +7,25 @@ module.exports = class StudyMember extends Sequelize.Model {
         id: {
           primaryKey: true,
           type: Sequelize.INTEGER.UNSIGNED,
+          autoIncrement: true,
           allowNull: false,
           unique: true,
         },
         study_id: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: "study",
-            key: "id",
+            model: 'study',
+            key: 'id',
           },
-          onDelete: "CASCADE",
+          onDelete: 'CASCADE',
         },
         user_id: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: "user",
-            key: "id",
+            model: 'user',
+            key: 'id',
           },
-          onDelete: "CASCADE",
+          onDelete: 'CASCADE',
         },
         late_cnt: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -38,28 +39,39 @@ module.exports = class StudyMember extends Sequelize.Model {
           type: Sequelize.INTEGER.UNSIGNED,
           defaultValue: 1,
         },
+        created_at: {
+          type: Sequelize.DATE,
+          allowNull: false,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
+        updated_at: {
+          type: Sequelize.DATE,
+          allowNull: true,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
       },
       {
         sequelize,
-        timestamps: true,
+        modelName: 'StudyMember',
+        tableName: 'study_member',
+        charset: 'utf8',
+        collate: 'utf8_general_ci',
+        initialAutoIncrement: 1,
+        timestamps: false,
+        paranoid: false,
         underscored: true,
-        modelName: "StudyMember",
-        tableName: "study_member",
-        paranoid: true,
-        charset: "utf8",
-        collate: "utf8_general_ci",
-      }
+      },
     );
   }
 
   static associate(db) {
     db.StudyMember.belongsTo(db.User, {
-      foreignKey: "user_id",
-      onDelete: "CASCADE",
+      foreignKey: 'user_id',
+      onDelete: 'CASCADE',
     });
     db.StudyMember.belongsTo(db.Study, {
-      foreignKey: "study_id",
-      onDelete: "CASCADE",
+      foreignKey: 'study_id',
+      onDelete: 'CASCADE',
     });
   }
 };

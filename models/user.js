@@ -7,6 +7,7 @@ module.exports = class User extends Sequelize.Model {
         id: {
           primaryKey: true,
           type: Sequelize.INTEGER.UNSIGNED,
+          autoIncrement: true,
           allowNull: false,
           unique: true,
         },
@@ -50,16 +51,27 @@ module.exports = class User extends Sequelize.Model {
           type: 'varchar(255)',
           allowNull: true,
         },
+        created_at: {
+          type: Sequelize.DATE,
+          allowNull: false,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
+        updated_at: {
+          type: Sequelize.DATE,
+          allowNull: true,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
       },
       {
         sequelize,
-        timestamps: true,
-        underscored: true,
         modelName: 'User',
         tableName: 'user',
-        paranoid: true,
         charset: 'utf8',
         collate: 'utf8_general_ci',
+        initialAutoIncrement: 1,
+        timestamps: false,
+        paranoid: false,
+        underscored: true,
       },
     );
   }

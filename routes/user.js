@@ -1,20 +1,30 @@
 const express = require('express');
+const passport = require('passport');
 const router = express.Router();
 const { User } = require('../models');
+
+// 구글 로그인
+router.get('/google', passport.authenticate('google', { scope: ['email'] }));
+router.get('/google/callback', passport.authenticate('google'), (req, res) => {
+  req.user.nickname
+    ? res.redirect('http://localhost:3000')
+    : res.redirect('http://localhost:3000/users/signup');
+  res.redirect('http://localhost:3000');
+});
 
 /* GET */
 // 회원 정보 조회
 router.get('/', async (req, res, next) => {
-  const pid = null; // from user session
-  const data = await User.findOne({ where: { pid } });
+  const id = req.user.id; // from user session
+  const data = await User.findOne({ where: { id } });
   res.send(data);
 });
 
 // login
 router.get('/login', async (req, res, next) => {
-  const pid = 'ddd'; // from user session
+  const id = req.user.id; // from user session
   try {
-    const data = await User.findOne({ where: { pid } });
+    const data = await User.findOne({ where: { id } });
     res.send(data);
   } catch (e) {
     res.send('error');
@@ -46,7 +56,7 @@ router.post('/', async (req, res, next) => {
 /* PATCH */
 // 회원 정보 수정
 router.patch('/', async (req, res, next) => {
-  const id = null; // from user session
+  const id = req.user.id; // from user session
   try {
     await User.update(
       {
@@ -66,7 +76,7 @@ router.patch('/', async (req, res, next) => {
 /* DELETE */
 // 회원 탈퇴
 router.delete('/', async (req, res, next) => {
-  const id = null; // from user session
+  const id = req.user.id; // from user session
   try {
     await User.destroy({ where: { id } });
     res.send('success');

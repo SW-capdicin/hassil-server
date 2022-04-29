@@ -67,6 +67,7 @@ passport.deserializeUser(async (id, done) => {
 });
 
 app.use('/', require('./routes/index'));
+app.use('/users', require('./routes/user'));
 
 app.use((req, res, next) => {
   const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);

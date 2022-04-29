@@ -9,6 +9,7 @@ const googleStrategyConfig = require('./config/googleStrategy');
 dotenv.config();
 
 const { sequelize } = require('./models');
+const { User } = require('./models');
 
 const app = express();
 app.set('port', process.env.PORT);
@@ -42,28 +43,35 @@ const GoogleStrategy = passportGoogle.Strategy;
 passport.use(
   new GoogleStrategy(
     googleStrategyConfig,
-    (accessToken, refreshToken, profile, done) => {
-      console.log(profile);
-      // 첫 로그인
-      // profile.id => pid
-      // profile.emails[0].value => email => db user테이블 save
-
-      // const providerId = profile.id.toString();
-      const user = { id: 1, name: 'Kim' };
-      done(null, user);
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        const exUser = await User.findOne({
+          where: { pid: profile.id },
+        });
+        if (exUser) {
+          done(null, exUser);
+        } else {
+          const newUser = await User.create({
+            pid: profile.id,
+            email: profile.emails[0].value,
+          });
+          done(null, newUser);
+        }
+      } catch (e) {
+        done(e);
+      }
     },
   ),
 );
+
 passport.serializeUser((user, done) => {
-  // done(null, user.id);
-  done(null, 1);
+  done(null, user.id);
 });
 
 passport.deserializeUser(async (id, done) => {
-  // id로 db에서 조회
-  // 해당 user 반환
-  const user = { id: 1, email: 'dydwls0669@gmail.com', name: 'Kim' };
-  done(user);
+  User.findOnd({ where: { id } })
+    .then((user) => done(null, user))
+    .catch((err) => done(err));
 });
 
 app.use('/', require('./routes/index'));

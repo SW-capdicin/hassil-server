@@ -2,6 +2,7 @@ const express = require('express');
 const passport = require('passport');
 const router = express.Router();
 const { User } = require('../models');
+const { PointHistory } = require('../models');
 
 // 구글 로그인
 router.get('/google', passport.authenticate('google', { scope: ['email'] }));
@@ -80,6 +81,17 @@ router.delete('/', async (req, res, next) => {
   try {
     await User.destroy({ where: { id } });
     res.send('success');
+  } catch (e) {
+    res.send('error');
+  }
+});
+
+// 사용자 포인트 내역 조회
+router.get('/:id/point-history', async (req, res, next) => {
+  const user_id = req.user.id; // from user session
+  try {
+    const data = await PointHistory.findAll({ where: { user_id } });
+    res.send(data);
   } catch (e) {
     res.send('error');
   }

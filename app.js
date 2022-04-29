@@ -2,7 +2,10 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const session = require('express-session');
+const passport = require('passport');
+const passportGoogle = require('passport-google-oauth20');
 const dotenv = require('dotenv');
+const googleStrategyConfig = require('./config/googleStrategy');
 dotenv.config();
 
 const { sequelize } = require('./models');
@@ -34,6 +37,34 @@ app.use(
     },
   }),
 );
+
+const GoogleStrategy = passportGoogle.Strategy;
+passport.use(
+  new GoogleStrategy(
+    googleStrategyConfig,
+    (accessToken, refreshToken, profile, done) => {
+      console.log(profile);
+      // 첫 로그인
+      // profile.id => pid
+      // profile.emails[0].value => email => db user테이블 save
+
+      // const providerId = profile.id.toString();
+      const user = { id: 1, name: 'Kim' };
+      done(null, user);
+    },
+  ),
+);
+passport.serializeUser((user, done) => {
+  // done(null, user.id);
+  done(null, 1);
+});
+
+passport.deserializeUser(async (id, done) => {
+  // id로 db에서 조회
+  // 해당 user 반환
+  const user = { id: 1, email: 'dydwls0669@gmail.com', name: 'Kim' };
+  done(user);
+});
 
 app.use('/', require('./routes/index'));
 app.use('/users', require('./routes/user'));

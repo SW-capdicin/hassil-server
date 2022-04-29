@@ -4,7 +4,7 @@
   "main": "app.js",
   "scripts": {
     "start": "nodemon app",
-    "deploy": "pm2 start ecosystem.config.js"
+    "deploy": "npm install && pm2 start ecosystem.config.js"
   },
   "author": "capdicin",
   "dependencies": {

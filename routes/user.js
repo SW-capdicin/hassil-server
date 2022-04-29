@@ -88,8 +88,8 @@ router.delete('/', async (req, res, next) => {
 
 // 사용자 포인트 내역 조회
 router.get('/:id/point-history', async (req, res, next) => {
-  const user_id = 1;
-  // const user_id = req.user.id; // from user session
+  // const user_id = 1;
+  const user_id = req.user.id; // from user session
   try {
     const data = await PointHistory.findAll({ where: { user_id } });
     res.send(data);

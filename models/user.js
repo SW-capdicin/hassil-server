@@ -13,7 +13,7 @@ module.exports = class User extends Sequelize.Model {
         },
         email: {
           type: 'varchar(45)',
-          allowNull: false,
+          allowNull: true,
         },
         pid: {
           type: 'varchar(45)',
@@ -21,11 +21,11 @@ module.exports = class User extends Sequelize.Model {
         },
         nickname: {
           type: 'varchar(45)',
-          allowNull: false,
+          allowNull: true,
         },
         phone_number: {
           type: 'varchar(45)',
-          allowNull: false,
+          allowNull: true,
         },
         point: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -33,19 +33,19 @@ module.exports = class User extends Sequelize.Model {
         },
         type: {
           type: Sequelize.INTEGER.UNSIGNED,
-          allowNull: false,
+          allowNull: true,
         },
         name: {
           type: 'varchar(45)',
-          allowNull: false,
+          allowNull: true,
         },
         bank_name: {
           type: 'varchar(45)',
-          allowNull: false,
+          allowNull: true,
         },
         bank_account: {
           type: 'varchar(45)',
-          allowNull: false,
+          allowNull: true,
         },
         src: {
           type: 'varchar(255)',

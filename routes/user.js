@@ -3,38 +3,29 @@ const passport = require('passport');
 const router = express.Router();
 const { User } = require('../models');
 const { PointHistory } = require('../models');
+require('dotenv').config();
 
 // 구글 로그인
 router.get('/google', passport.authenticate('google', { scope: ['email'] }));
 router.get('/google/callback', passport.authenticate('google'), (req, res) => {
   req.user.nickname
-    ? res.redirect('http://localhost:3000')
-    : res.redirect('http://localhost:3000/users/signup');
-  res.redirect('http://localhost:3000');
+    ? res.redirect(process.env.GOOGLE_LOGIN_HOME_REDIRECT_URL)
+    : res.redirect(process.env.GOOGLE_LOGIN_SIGNUP_REDIRECT_URL);
 });
 
-/* GET */
 // 회원 정보 조회
-router.get('/', async (req, res, next) => {
-  const id = req.user.id; // from user session
-  const data = await User.findOne({ where: { id } });
-  res.send(data);
-});
-
-// login
-router.get('/login', async (req, res, next) => {
-  const id = req.user.id; // from user session
-  try {
-    const data = await User.findOne({ where: { id } });
-    res.send(data);
-  } catch (e) {
-    res.send('error');
+router.get('/', (req, res) => {
+  if (req.user) {
+    const { id } = req.user.dataValues;
+    res.send({ id });
+  } else {
+    res.send({});
   }
 });
 
 /* POST */
 // 회원가입
-router.post('/', async (req, res, next) => {
+router.post('/', async (req, res) => {
   try {
     await User.create({
       email: req.body.email,
@@ -56,7 +47,7 @@ router.post('/', async (req, res, next) => {
 
 /* PATCH */
 // 회원 정보 수정
-router.patch('/', async (req, res, next) => {
+router.patch('/', async (req, res) => {
   const id = req.user.id; // from user session
   try {
     await User.update(
@@ -74,9 +65,8 @@ router.patch('/', async (req, res, next) => {
   }
 });
 
-/* DELETE */
 // 회원 탈퇴
-router.delete('/', async (req, res, next) => {
+router.delete('/', async (req, res) => {
   const id = req.user.id; // from user session
   try {
     await User.destroy({ where: { id } });

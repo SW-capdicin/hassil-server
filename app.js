@@ -4,9 +4,8 @@ const morgan = require('morgan');
 const session = require('express-session');
 const passport = require('passport');
 const passportGoogle = require('passport-google-oauth20');
-const dotenv = require('dotenv');
 const googleStrategyConfig = require('./config/googleStrategy');
-dotenv.config();
+const sessionConfig = require('./config/sessionConfig');
 
 const { sequelize } = require('./models');
 const { User } = require('./models');
@@ -17,27 +16,21 @@ app.set('port', process.env.PORT);
 sequelize
   .sync({ force: false })
   .then(() => {
+    // eslint-disable-next-line no-console
     console.log('DB 연결 성공');
   })
   .catch((err) => {
+    // eslint-disable-next-line no-console
     console.error(err);
   });
 
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser(process.env.COOKIE_SECRET));
-app.use(
-  session({
-    resave: false,
-    saveUninitialized: false,
-    secret: process.env.COOKIE_SECRET,
-    cookie: {
-      httpOnly: true,
-      secure: false,
-    },
-  }),
-);
+app.use(cookieParser());
+app.use(session(sessionConfig));
+app.use(passport.initialize());
+app.use(passport.session());
 
 const GoogleStrategy = passportGoogle.Strategy;
 passport.use(
@@ -69,13 +62,15 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser(async (id, done) => {
-  User.findOnd({ where: { id } })
-    .then((user) => done(null, user))
-    .catch((err) => done(err));
+  try {
+    const user = await User.findOne({ where: { id } });
+    done(null, user);
+  } catch (err) {
+    done(err);
+  }
 });
 
-app.use('/', require('./routes/index'));
-app.use('/users', require('./routes/user'));
+app.use('/api', require('./routes'));
 
 app.use((req, res, next) => {
   const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);

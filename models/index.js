@@ -1,29 +1,29 @@
-const Sequelize = require("sequelize");
-const env = process.env.NODE_ENV || "development";
-const config = require("../config/config")[env];
+const Sequelize = require('sequelize');
+const env = process.env.NODE_ENV || 'development';
+const config = require('../config/dbConfig')[env];
 
-const User = require("./user");
-const StudyCafe = require("./studyCafe");
-const PointHistory = require("./pointHistory");
-const Answer = require("./answer");
-const Question = require("./question");
-const Notice = require("./notice");
-const Review = require("./review");
-const Study = require("./study");
-const Category = require("./category");
-const Comment = require("./comment");
-const StudyMember = require("./studyMember");
-const Reservation = require("./reservation");
-const StudyCafeImage = require("./studyCafeImage");
-const StudyRoom = require("./studyRoom");
-const StudyRoomSchedule = require("./studyRoomSchedule");
+const User = require('./user');
+const StudyCafe = require('./studyCafe');
+const PointHistory = require('./pointHistory');
+const Answer = require('./answer');
+const Question = require('./question');
+const Notice = require('./notice');
+const Review = require('./review');
+const Study = require('./study');
+const Category = require('./category');
+const Comment = require('./comment');
+const StudyMember = require('./studyMember');
+const Reservation = require('./reservation');
+const StudyCafeImage = require('./studyCafeImage');
+const StudyRoom = require('./studyRoom');
+const StudyRoomSchedule = require('./studyRoomSchedule');
 
 const db = {};
 const sequelize = new Sequelize(
   config.databse,
   config.username,
   config.password,
-  config
+  config,
 );
 
 db.sequelize = sequelize;

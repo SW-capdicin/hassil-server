@@ -45,6 +45,10 @@ router
     try {
       const study = await Study.findOne({
         where: { id: req.params.id },
+        include: {
+          model: Comment,
+          where: { study_id: req.params.id },
+        },
       });
       console.log(study);
       res.json(study);

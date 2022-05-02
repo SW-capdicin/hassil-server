@@ -39,6 +39,18 @@ router
     }
   });
 
+router.route('/categories/:cid').get(async (req, res) => {
+  try {
+    const study = await Study.findAll({
+      where: { category_id: req.params.cid },
+    });
+    console.log(study);
+    res.json(study);
+  } catch (err) {
+    console.error(err);
+  }
+});
+
 router
   .route('/:id')
   .get(async (req, res) => {
@@ -70,7 +82,6 @@ router
 
 router.route('/:id/comments').post(async (req, res) => {
   try {
-    console.log(req.params);
     const comment = await Comment.create({
       study_id: req.params.id,
       user_id: req.body.user_id,

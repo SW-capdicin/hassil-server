@@ -14,39 +14,34 @@ router.get('/google/callback', passport.authenticate('google'), (req, res) => {
 });
 
 // 회원 정보 조회
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
+  // 로그인 되어 있을 때
   if (req.user) {
     const { id } = req.user.dataValues;
-    res.send({ id });
+    // 회원가입 되어 있을 때
+    if (req.user.nickname) {
+      res.send({
+        nickname: req.user.nickname,
+        phone_number: req.user.phone_number,
+        type: req.user.type,
+        name: req.user.name,
+        bank_name: req.user.bank_name,
+        bank_account: req.user.bank_account,
+      });
+      // const user = await User.findOne({
+      //   where: { id },
+      // });
+      // res.json(user);
+    } else {
+      res.json(id);
+    }
   } else {
-    res.send({});
-  }
-});
-
-/* POST */
-// 회원가입
-router.post('/', async (req, res) => {
-  try {
-    await User.create({
-      email: req.body.email,
-      pid: req.body.pid,
-      nickname: req.body.nickname,
-      phone_number: req.body.phone_number,
-      point: req.body.point,
-      type: req.body.type,
-      name: req.body.name,
-      bank_name: req.body.bank_name,
-      bank_account: req.body.bank_account,
-      src: req.body.src,
-    });
-    res.send('success');
-  } catch (e) {
-    res.send('error');
+    res.json();
   }
 });
 
 /* PATCH */
-// 회원 정보 수정
+// 회원가입 및 회원 정보 수정
 router.patch('/', async (req, res) => {
   const id = req.user.id; // from user session
   try {
@@ -54,6 +49,8 @@ router.patch('/', async (req, res) => {
       {
         nickname: req.body.nickname,
         phone_number: req.body.phone_number,
+        type: req.body.type,
+        name: req.body.name,
         bank_name: req.body.bank_name,
         bank_account: req.body.bank_account,
       },

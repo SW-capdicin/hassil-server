@@ -57,10 +57,6 @@ router
     try {
       const study = await Study.findOne({
         where: { id: req.params.id },
-        include: {
-          model: Comment,
-          where: { study_id: req.params.id },
-        },
       });
       console.log(study);
       res.json(study);
@@ -80,19 +76,31 @@ router
     }
   });
 
-router.route('/:id/comments').post(async (req, res) => {
-  try {
-    const comment = await Comment.create({
-      study_id: req.params.id,
-      user_id: req.body.user_id,
-      contents: req.body.contents,
-    });
-    console.log(comment);
-    res.status(201).json(comment);
-  } catch (err) {
-    console.log(err);
-  }
-});
+router
+  .route('/:id/comments')
+  .get(async (req, res) => {
+    try {
+      const comments = await Comment.findAll({
+        where: { study_id: req.params.id },
+      });
+      res.json(comments);
+    } catch (err) {
+      console.error(err);
+    }
+  })
+  .post(async (req, res) => {
+    try {
+      const comment = await Comment.create({
+        study_id: req.params.id,
+        user_id: req.body.user_id,
+        contents: req.body.contents,
+      });
+      console.log(comment);
+      res.status(201).json(comment);
+    } catch (err) {
+      console.log(err);
+    }
+  });
 
 router
   .route('/:id/comments/:cid')

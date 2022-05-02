@@ -1,8 +1,7 @@
 const express = require('express');
+const { Study, Comment } = require('../models');
+
 const router = express.Router();
-const Study = require('../models/study');
-const Comment = require('../models/comment');
-require('dotenv').config();
 
 router
   .route('/')

@@ -1,5 +1,6 @@
 const express = require('express');
 const got = require('got');
+const axios = require('axios');
 
 const router = express.Router();
 
@@ -12,22 +13,26 @@ router.get('/success', function (req, res) {
   console.log(secretKey);
   console.log(req.query);
 
-  got
-    .post('https://api.tosspayments.com/v1/payments/' + req.query.paymentKey, {
-      headers: {
-        Authorization:
-          'Basic ' + Buffer.from(secretKey + ':').toString('base64'),
-        'Content-Type': 'application/json',
-      },
-      json: {
+  axios
+    .post(
+      'https://api.tosspayments.com/v1/payments/' + req.query.paymentKey,
+      {
         orderId: req.query.orderId,
         amount: req.query.amount,
       },
-      responseType: 'json',
-    })
+      {
+        headers: {
+          Authorization:
+            'Basic dGVzdF9za196WExrS0V5cE5BcldtbzUwblgzbG1lYXhZRzVSOg==',
+          'Content-Type': 'application/json',
+        },
+      },
+    )
     .then(function (response) {
       console.log('성공!!!');
-      console.log(response.body);
+      // console.log(response.body);
+      console.log(response);
+      res.send('success');
       // TODO: 구매 완료 비즈니스 로직 구현
     })
     .catch(function (e) {

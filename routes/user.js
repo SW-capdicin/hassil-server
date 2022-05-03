@@ -13,9 +13,7 @@ router.get('/google/callback', passport.authenticate('google'), (req, res) => {
     : res.redirect(process.env.GOOGLE_LOGIN_SIGNUP_REDIRECT_URL);
 });
 
-router
-  .route('/')
-
+router.route('/')
   // 회원 정보 조회
   .get(async (req, res) => {
     // 로그인 되어 있을 때

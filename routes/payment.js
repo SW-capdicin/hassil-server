@@ -1,5 +1,4 @@
 const express = require('express');
-const got = require('got');
 const axios = require('axios');
 
 const router = express.Router();
@@ -30,16 +29,13 @@ router.get('/success', function (req, res) {
     )
     .then(function (response) {
       console.log('성공!!!');
-      // console.log(response.body);
-      console.log(response);
-      res.send('success');
       // TODO: 구매 완료 비즈니스 로직 구현
+      
+      res.send('success');
     })
     .catch(function (e) {
-      console.log(e);
-      res.redirect(
-        `http://localhost:3000/payment-fail?code=${e.response?.body?.code}&message=${e.response?.body?.message}`,
-      );
+      console.log('payment error');
+      res.send('error');
     });
 });
 

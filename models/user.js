@@ -23,7 +23,7 @@ module.exports = class User extends Sequelize.Model {
           type: 'varchar(45)',
           allowNull: true,
         },
-        phone_number: {
+        phoneNumber: {
           type: 'varchar(45)',
           allowNull: true,
         },

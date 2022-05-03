@@ -3,8 +3,7 @@ const { Study, Comment } = require('../models');
 
 const router = express.Router();
 
-router
-  .route('/')
+router.route('/')
   .get(async (req, res) => {
     try {
       const studies = await Study.findAll({});
@@ -50,8 +49,7 @@ router.route('/categories/:cid').get(async (req, res) => {
   }
 });
 
-router
-  .route('/:id')
+router.route('/:id')
   .get(async (req, res) => {
     try {
       const study = await Study.findOne({
@@ -75,8 +73,7 @@ router
     }
   });
 
-router
-  .route('/:id/comments')
+router.route('/:id/comments')
   .get(async (req, res) => {
     try {
       const comments = await Comment.findAll({
@@ -101,8 +98,7 @@ router
     }
   });
 
-router
-  .route('/:id/comments/:cid')
+router.route('/:id/comments/:cid')
   .patch(async (req, res) => {
     try {
       const result = await Comment.update(

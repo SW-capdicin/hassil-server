@@ -24,12 +24,15 @@ router
       // 회원가입 되어 있을 때
       if (req.user.nickname) {
         res.json({
+          id: id,
           nickname: req.user.nickname,
           phone_number: req.user.phone_number,
+          point: req.user.point,
           type: req.user.type,
           name: req.user.name,
           bank_name: req.user.bank_name,
           bank_account: req.user.bank_account,
+          src: req.user.src,
         });
       } else {
         res.json(id);

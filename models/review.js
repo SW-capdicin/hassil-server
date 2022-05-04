@@ -11,18 +11,18 @@ module.exports = class Review extends Sequelize.Model {
           allowNull: false,
           unique: true,
         },
-        study_cafe_id: {
+        studyCafeId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: 'study_cafe',
+            model: 'StudyCafe',
             key: 'id',
           },
           onDelete: 'CASCADE',
         },
-        user_id: {
+        userId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: 'user',
+            model: 'User',
             key: 'id',
           },
           onDelete: 'CASCADE',
@@ -35,12 +35,12 @@ module.exports = class Review extends Sequelize.Model {
           type: Sequelize.INTEGER.UNSIGNED,
           allowNull: false,
         },
-        created_at: {
+        createdAt: {
           type: Sequelize.DATE,
           allowNull: false,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         },
-        updated_at: {
+        updatedAt: {
           type: Sequelize.DATE,
           allowNull: true,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
@@ -49,24 +49,24 @@ module.exports = class Review extends Sequelize.Model {
       {
         sequelize,
         modelName: 'Review',
-        tableName: 'review',
+        tableName: 'Review',
         charset: 'utf8',
         collate: 'utf8_general_ci',
         initialAutoIncrement: 1,
         timestamps: false,
         paranoid: false,
-        underscored: true,
+        underscored: false,
       },
     );
   }
 
   static associate(db) {
     db.Review.belongsTo(db.User, {
-      foreignKey: 'user_id',
+      foreignKey: 'userId',
       onDelete: 'CASCADE',
     });
     db.Review.belongsTo(db.StudyCafe, {
-      foreignKey: 'study_cafe_id',
+      foreignKey: 'studyCafeId',
       onDelete: 'CASCADE',
     });
   }

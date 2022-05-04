@@ -11,10 +11,10 @@ module.exports = class Notice extends Sequelize.Model {
           allowNull: false,
           unique: true,
         },
-        user_id: {
+        userId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: 'user',
+            model: 'User',
             key: 'id',
           },
           //   onDelete: "CASCADE",
@@ -27,12 +27,12 @@ module.exports = class Notice extends Sequelize.Model {
           type: 'varchar(255)',
           allowNull: false,
         },
-        created_at: {
+        createdAt: {
           type: Sequelize.DATE,
           allowNull: false,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         },
-        updated_at: {
+        updatedAt: {
           type: Sequelize.DATE,
           allowNull: true,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
@@ -41,20 +41,20 @@ module.exports = class Notice extends Sequelize.Model {
       {
         sequelize,
         modelName: 'Notice',
-        tableName: 'notice',
+        tableName: 'Notice',
         charset: 'utf8',
         collate: 'utf8_general_ci',
         initialAutoIncrement: 1,
         timestamps: false,
         paranoid: false,
-        underscored: true,
+        underscored: false,
       },
     );
   }
 
   static associate(db) {
     db.Notice.belongsTo(db.User, {
-      foreignKey: 'user_id',
+      foreignKey: 'userId',
       //   onDelete: "CASCADE",
     });
   }

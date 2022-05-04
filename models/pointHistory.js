@@ -11,13 +11,12 @@ module.exports = class PointHistory extends Sequelize.Model {
           allowNull: false,
           unique: true,
         },
-        user_id: {
+        userId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: 'user',
+            model: 'User',
             key: 'id',
           },
-          //   onDelete: "CASCADE",
         },
         balance: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -31,12 +30,12 @@ module.exports = class PointHistory extends Sequelize.Model {
           type: Sequelize.TINYINT,
           allowNull: false,
         },
-        created_at: {
+        createdAt: {
           type: Sequelize.DATE,
           allowNull: false,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         },
-        updated_at: {
+        updatedAt: {
           type: Sequelize.DATE,
           allowNull: true,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
@@ -45,21 +44,20 @@ module.exports = class PointHistory extends Sequelize.Model {
       {
         sequelize,
         modelName: 'PointHistory',
-        tableName: 'point_history',
+        tableName: 'PointHistory',
         charset: 'utf8',
         collate: 'utf8_general_ci',
         initialAutoIncrement: 1,
         timestamps: false,
         paranoid: false,
-        underscored: true,
+        underscored: false,
       },
     );
   }
 
   static associate(db) {
     db.PointHistory.belongsTo(db.User, {
-      foreignKey: 'user_id',
-      //   onDelete: "CASCADE",
+      foreignKey: 'userId',
     });
   }
 };

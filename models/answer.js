@@ -11,18 +11,18 @@ module.exports = class Answer extends Sequelize.Model {
           allowNull: false,
           unique: true,
         },
-        user_id: {
+        userId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: 'user',
+            model: 'User',
             key: 'id',
           },
           //   onDelete: "CASCADE",
         },
-        question_id: {
+        questionId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: 'question',
+            model: 'Question',
             key: 'id',
           },
           onDelete: 'CASCADE',
@@ -31,12 +31,12 @@ module.exports = class Answer extends Sequelize.Model {
           type: 'varchar(255)',
           allowNull: false,
         },
-        created_at: {
+        createdAt: {
           type: Sequelize.DATE,
           allowNull: false,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         },
-        updated_at: {
+        updatedAt: {
           type: Sequelize.DATE,
           allowNull: true,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
@@ -45,24 +45,24 @@ module.exports = class Answer extends Sequelize.Model {
       {
         sequelize,
         modelName: 'Answer',
-        tableName: 'answer',
+        tableName: 'Answer',
         charset: 'utf8',
         collate: 'utf8_general_ci',
         initialAutoIncrement: 1,
         timestamps: false,
         paranoid: false,
-        underscored: true,
+        underscored: false,
       },
     );
   }
 
   static associate(db) {
     db.Answer.belongsTo(db.User, {
-      foreignKey: 'user_id',
+      foreignKey: 'userId',
       //   onDelete: "CASCADE",
     });
     db.Answer.belongsTo(db.Question, {
-      foreignKey: 'question_id',
+      foreignKey: 'questionId',
       onDelete: 'CASCADE',
     });
   }

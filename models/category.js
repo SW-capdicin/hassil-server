@@ -15,12 +15,12 @@ module.exports = class Category extends Sequelize.Model {
           type: 'varchar(45)',
           allowNull: false,
         },
-        created_at: {
+        createdAt: {
           type: Sequelize.DATE,
           allowNull: false,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         },
-        updated_at: {
+        updatedAt: {
           type: Sequelize.DATE,
           allowNull: true,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
@@ -29,20 +29,20 @@ module.exports = class Category extends Sequelize.Model {
       {
         sequelize,
         modelName: 'Category',
-        tableName: 'category',
+        tableName: 'Category',
         charset: 'utf8',
         collate: 'utf8_general_ci',
         initialAutoIncrement: 1,
         timestamps: false,
         paranoid: false,
-        underscored: true,
+        underscored: false,
       },
     );
   }
 
   static associate(db) {
     db.Category.hasMany(db.Study, {
-      foreignKey: 'category_id',
+      foreignKey: 'categoryId',
     });
   }
 };

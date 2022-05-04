@@ -5,7 +5,6 @@ require('dotenv').config();
 
 const router = express.Router();
 
-// 구글 로그인
 router.get('/google', passport.authenticate('google', { scope: ['email'] }));
 router.get('/google/callback', passport.authenticate('google'), (req, res) => {
   req.user.nickname
@@ -40,7 +39,6 @@ router
       res.json({});
     }
   })
-
   // 회원 가입 및 회원 정보 수정
   .patch(async (req, res) => {
     const id = req.user.id;
@@ -61,7 +59,6 @@ router
       res.status(400).end();
     }
   })
-
   // 회원 탈퇴
   .delete(async (req, res) => {
     const id = req.user.id;
@@ -72,6 +69,15 @@ router
       res.send('error');
     }
   });
+
+router.post('/logout', (req, res, next) => {
+  try {
+    req.logout();
+    res.status(200).end();
+  } catch (err) {
+    next(err);
+  }
+});
 
 // 사용자 포인트 내역 조회
 router.route('/:id/point-history').get(async (req, res) => {

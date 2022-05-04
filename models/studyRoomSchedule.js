@@ -11,18 +11,18 @@ module.exports = class StudyRoomSchedule extends Sequelize.Model {
           allowNull: false,
           unique: true,
         },
-        reservation_id: {
+        reservationId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: 'reservation',
+            model: 'Reservation',
             key: 'id',
           },
           onDelete: 'CASCADE',
         },
-        studyroom_id: {
+        studyRoomId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: 'study_room',
+            model: 'StudyRoom',
             key: 'id',
           },
           onDelete: 'CASCADE',
@@ -35,12 +35,12 @@ module.exports = class StudyRoomSchedule extends Sequelize.Model {
           type: Sequelize.INTEGER.UNSIGNED,
           allowNull: false,
         },
-        created_at: {
+        createdAt: {
           type: Sequelize.DATE,
           allowNull: false,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         },
-        updated_at: {
+        updatedAt: {
           type: Sequelize.DATE,
           allowNull: true,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
@@ -49,24 +49,24 @@ module.exports = class StudyRoomSchedule extends Sequelize.Model {
       {
         sequelize,
         modelName: 'StudyRoomSchedule',
-        tableName: 'study_room_schedule',
+        tableName: 'StudyRoomSchedule',
         charset: 'utf8',
         collate: 'utf8_general_ci',
         initialAutoIncrement: 1,
         timestamps: false,
         paranoid: false,
-        underscored: true,
+        underscored: false,
       },
     );
   }
 
   static associate(db) {
     db.StudyRoomSchedule.belongsTo(db.StudyRoom, {
-      foreignKey: 'studyroom_id',
+      foreignKey: 'studyRoomId',
       onDelete: 'CASCADE',
     });
     db.StudyRoomSchedule.belongsTo(db.Reservation, {
-      foreignKey: 'reservation_id',
+      foreignKey: 'reservationId',
       onDelete: 'CASCADE',
     });
   }

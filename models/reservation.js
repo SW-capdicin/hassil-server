@@ -11,15 +11,15 @@ module.exports = class Reservation extends Sequelize.Model {
           allowNull: false,
           unique: true,
         },
-        study_id: {
+        studyId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: 'study',
+            model: 'Study',
             key: 'id',
           },
           onDelete: 'CASCADE',
         },
-        reservation_person_name: {
+        reservationPersonName: {
           type: 'varchar(45)',
           allowNull: false,
         },
@@ -29,18 +29,18 @@ module.exports = class Reservation extends Sequelize.Model {
         },
         longitude: {
           type: 'varchar(45)',
-          // allowNull: false,
+          allowNull: true,
         },
         latitude: {
           type: 'varchar(45)',
-          // allowNull: false,
+          allowNull: true,
         },
-        created_at: {
+        createdAt: {
           type: Sequelize.DATE,
           allowNull: false,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         },
-        updated_at: {
+        updatedAt: {
           type: Sequelize.DATE,
           allowNull: true,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
@@ -49,24 +49,24 @@ module.exports = class Reservation extends Sequelize.Model {
       {
         sequelize,
         modelName: 'Reservation',
-        tableName: 'reservation',
+        tableName: 'Reservation',
         charset: 'utf8',
         collate: 'utf8_general_ci',
         initialAutoIncrement: 1,
         timestamps: false,
         paranoid: false,
-        underscored: true,
+        underscored: false,
       },
     );
   }
 
   static associate(db) {
     db.Reservation.belongsTo(db.Study, {
-      foreignKey: 'study_id',
+      foreignKey: 'studyId',
       onDelete: 'CASCADE',
     });
     db.Reservation.hasMany(db.StudyRoomSchedule, {
-      foreignKey: 'reservation_id',
+      foreignKey: 'reservationId',
     });
   }
 };

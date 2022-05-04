@@ -23,7 +23,7 @@ module.exports = class User extends Sequelize.Model {
           type: 'varchar(45)',
           allowNull: true,
         },
-        phone_number: {
+        phoneNumber: {
           type: 'varchar(45)',
           allowNull: true,
         },
@@ -39,11 +39,11 @@ module.exports = class User extends Sequelize.Model {
           type: 'varchar(45)',
           allowNull: true,
         },
-        bank_name: {
+        bankName: {
           type: 'varchar(45)',
           allowNull: true,
         },
-        bank_account: {
+        bankAccount: {
           type: 'varchar(45)',
           allowNull: true,
         },
@@ -51,12 +51,12 @@ module.exports = class User extends Sequelize.Model {
           type: 'varchar(255)',
           allowNull: true,
         },
-        created_at: {
+        createdAt: {
           type: Sequelize.DATE,
           allowNull: false,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         },
-        updated_at: {
+        updatedAt: {
           type: Sequelize.DATE,
           allowNull: true,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
@@ -65,41 +65,41 @@ module.exports = class User extends Sequelize.Model {
       {
         sequelize,
         modelName: 'User',
-        tableName: 'user',
+        tableName: 'User',
         charset: 'utf8',
         collate: 'utf8_general_ci',
         initialAutoIncrement: 1,
         timestamps: false,
         paranoid: false,
-        underscored: true,
+        underscored: false,
       },
     );
   }
 
   static associate(db) {
     db.User.hasMany(db.StudyCafe, {
-      foreignKey: 'user_id',
+      foreignKey: 'userId',
     });
     db.User.hasMany(db.Review, {
-      foreignKey: 'user_id',
+      foreignKey: 'userId',
     });
     db.User.hasMany(db.Notice, {
-      foreignKey: 'user_id',
+      foreignKey: 'userId',
     });
     db.User.hasMany(db.Question, {
-      foreignKey: 'user_id',
+      foreignKey: 'userId',
     });
     db.User.hasMany(db.Answer, {
-      foreignKey: 'user_id',
+      foreignKey: 'userId',
     });
     db.User.hasMany(db.StudyMember, {
-      foreignKey: 'user_id',
+      foreignKey: 'userId',
     });
     db.User.hasMany(db.Comment, {
-      foreignKey: 'user_id',
+      foreignKey: 'userId',
     });
     db.User.hasMany(db.PointHistory, {
-      foreignKey: 'user_id',
+      foreignKey: 'userId',
     });
   }
 };

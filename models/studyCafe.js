@@ -11,10 +11,10 @@ module.exports = class StudyCafe extends Sequelize.Model {
           allowNull: false,
           unique: true,
         },
-        user_id: {
+        userId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: 'user',
+            model: 'User',
             key: 'id',
           },
           onDelete: 'CASCADE',
@@ -27,7 +27,7 @@ module.exports = class StudyCafe extends Sequelize.Model {
           type: 'varchar(45)',
           allowNull: false,
         },
-        shop_number: {
+        shopNumber: {
           type: 'varchar(45)',
           allowNull: false,
         },
@@ -39,7 +39,7 @@ module.exports = class StudyCafe extends Sequelize.Model {
           type: 'longtext',
           allowNull: false,
         },
-        operation_time: {
+        operationTime: {
           type: 'varchar(255)',
           allowNull: false,
         },
@@ -47,12 +47,12 @@ module.exports = class StudyCafe extends Sequelize.Model {
           type: Sequelize.FLOAT,
           defaultValue: 0,
         },
-        created_at: {
+        createdAt: {
           type: Sequelize.DATE,
           allowNull: false,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         },
-        updated_at: {
+        updatedAt: {
           type: Sequelize.DATE,
           allowNull: true,
           defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
@@ -61,30 +61,30 @@ module.exports = class StudyCafe extends Sequelize.Model {
       {
         sequelize,
         modelName: 'StudyCafe',
-        tableName: 'study_cafe',
+        tableName: 'StudyCafe',
         charset: 'utf8',
         collate: 'utf8_general_ci',
         initialAutoIncrement: 1,
         timestamps: false,
         paranoid: false,
-        underscored: true,
+        underscored: false,
       },
     );
   }
 
   static associate(db) {
     db.StudyCafe.belongsTo(db.User, {
-      foreignKey: 'user_id',
+      foreignKey: 'userId',
       onDelete: 'CASCADE',
     });
     db.StudyCafe.hasMany(db.Review, {
-      foreignKey: 'study_cafe_id',
+      foreignKey: 'studyCafeId',
     });
     db.StudyCafe.hasMany(db.StudyCafeImage, {
-      foreignKey: 'study_cafe_id',
+      foreignKey: 'studyCafeId',
     });
     db.StudyCafe.hasMany(db.StudyRoom, {
-      foreignKey: 'study_cafe_id',
+      foreignKey: 'studyCafeId',
     });
   }
 };

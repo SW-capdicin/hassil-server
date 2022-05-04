@@ -13,7 +13,8 @@ router.get('/google/callback', passport.authenticate('google'), (req, res) => {
     : res.redirect(process.env.GOOGLE_LOGIN_SIGNUP_REDIRECT_URL);
 });
 
-router.route('/')
+router
+  .route('/')
   // 회원 정보 조회
   .get(async (req, res) => {
     // 로그인 되어 있을 때
@@ -33,10 +34,10 @@ router.route('/')
           src: req.user.src,
         });
       } else {
-        res.json(id);
+        res.json({ id });
       }
     } else {
-      res.json();
+      res.json({});
     }
   })
 
@@ -47,17 +48,17 @@ router.route('/')
       await User.update(
         {
           nickname: req.body.nickname,
-          phone_number: req.body.phone_number,
+          phone_number: req.body.phoneNumber,
           type: req.body.type,
           name: req.body.name,
-          bank_name: req.body.bank_name,
-          bank_account: req.body.bank_account,
+          bank_name: req.body.bankName,
+          bank_account: req.body.bankAccount,
         },
         { where: { id } },
       );
-      res.send('success');
+      res.status(200).end();
     } catch (e) {
-      res.send('error');
+      res.status(400).end();
     }
   })
 

@@ -17,18 +17,14 @@ router
   // 회원 정보 조회
   .get(async (req, res) => {
     try {
-      // 로그인되어 있을 때
+      // 로그인 확인
       if (req.user) {
-        const id = await req.user.id; // from user session
+        const id = req.user.id; // from user session
         const user = await User.findOne({
           where: { id },
         });
-        // 회원가입되어 있을 때
-        if (user.nickname) {
-          res.json(user);
-        } else {
-          res.json({ id });
-        }
+        // 회원가입 확인
+        user.nickname ? res.json(user) : res.json({ id });
       } else {
         res.json({});
       }

@@ -16,27 +16,20 @@ router
   .route('/')
   // 회원 정보 조회
   .get(async (req, res) => {
-    // 로그인 되어 있을 때
-    if (req.user) {
-      const { id } = req.user.dataValues; // from user session
-      // 회원가입 되어 있을 때
-      if (req.user.nickname) {
-        res.json({
-          id: id,
-          nickname: req.user.nickname,
-          phone_number: req.user.phone_number,
-          point: req.user.point,
-          type: req.user.type,
-          name: req.user.name,
-          bank_name: req.user.bank_name,
-          bank_account: req.user.bank_account,
-          src: req.user.src,
+    try {
+      // 로그인 확인
+      if (req.user) {
+        const id = req.user.id; // from user session
+        const user = await User.findOne({
+          where: { id },
         });
+        // 회원가입 확인
+        user.nickname ? res.json(user) : res.json({ id });
       } else {
-        res.json({ id });
+        res.json({});
       }
-    } else {
-      res.json({});
+    } catch (e) {
+      console.error(e);
     }
   })
   // 회원 가입 및 회원 정보 수정
@@ -46,11 +39,11 @@ router
       await User.update(
         {
           nickname: req.body.nickname,
-          phone_number: req.body.phoneNumber,
+          phoneNumber: req.body.phoneNumber,
           type: req.body.type,
           name: req.body.name,
-          bank_name: req.body.bankName,
-          bank_account: req.body.bankAccount,
+          bankName: req.body.bankName,
+          bankAccount: req.body.bankAccount,
         },
         { where: { id } },
       );
@@ -81,9 +74,9 @@ router.post('/logout', (req, res, next) => {
 
 // 사용자 포인트 내역 조회
 router.route('/:id/point-history').get(async (req, res) => {
-  const user_id = req.user.id;
+  const userId = req.user.id;
   try {
-    const data = await PointHistory.findAll({ where: { user_id } });
+    const data = await PointHistory.findAll({ where: { userId } });
     res.send(data);
   } catch (e) {
     res.send('error');

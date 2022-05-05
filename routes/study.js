@@ -11,30 +11,17 @@ router
       res.json(studies);
     } catch (err) {
       console.error(err);
+      res.status(400).json(err);
     }
   })
   .post(async (req, res) => {
     try {
-      const study = await Study.create({
-        categoryId: req.body.categoryId,
-        name: req.body.name,
-        info: req.body.info,
-        meetingCnt: req.body.meetingCnt,
-        startDate: req.body.startDate,
-        endDate: req.body.endDate,
-        depositPerPerson: req.body.depositPerPerson,
-        location: req.body.location,
-        operationTime: req.body.operationTime,
-        minPerson: req.body.minPerson,
-        maxPerson: req.body.maxPerson,
-        absentFee: req.body.absentFee,
-        lateFee: req.body.lateFee,
-        src: req.body.src,
-      });
-      console.log(study);
-      res.status(201).json(study);
+      // 검증 logic 필요
+      const study = await Study.create(req.body);
+      res.status(200).json(study);
     } catch (err) {
       console.error(err);
+      res.status(400).json(err);
     }
   });
 
@@ -47,6 +34,7 @@ router.route('/categories/:cid').get(async (req, res) => {
     res.json(study);
   } catch (err) {
     console.error(err);
+    res.status(400).json(err);
   }
 });
 
@@ -61,6 +49,7 @@ router
       res.json(study);
     } catch (err) {
       console.error(err);
+      res.status(400).json(err);
     }
   })
   .delete(async (req, res) => {
@@ -72,6 +61,7 @@ router
       res.json(result);
     } catch (err) {
       console.error(err);
+      res.status(400).json(err);
     }
   });
 
@@ -85,6 +75,7 @@ router
       res.json(comments);
     } catch (err) {
       console.error(err);
+      res.status(400).json(err);
     }
   })
   .post(async (req, res) => {
@@ -95,9 +86,10 @@ router
         contents: req.body.contents,
       });
       console.log(comment);
-      res.status(201).json(comment);
+      res.status(200).json(comment);
     } catch (err) {
       console.log(err);
+      res.status(400).json(err);
     }
   });
 
@@ -115,6 +107,7 @@ router
       res.json(result);
     } catch (err) {
       console.log(err);
+      res.status(400).json(err);
     }
   })
   .delete(async (req, res) => {
@@ -126,6 +119,7 @@ router
       res.json(result);
     } catch (err) {
       console.error(err);
+      res.status(400).json(err);
     }
   });
 

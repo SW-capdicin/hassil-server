@@ -6,6 +6,7 @@ const passport = require('passport');
 const passportGoogle = require('passport-google-oauth20');
 const googleStrategyConfig = require('./config/googleStrategy');
 const sessionConfig = require('./config/sessionConfig');
+const cors = require('cors');
 
 const { sequelize } = require('./models');
 const { User } = require('./models');
@@ -31,6 +32,12 @@ app.use(cookieParser());
 app.use(session(sessionConfig));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(
+  cors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+  }),
+);
 
 const GoogleStrategy = passportGoogle.Strategy;
 passport.use(
@@ -58,10 +65,13 @@ passport.use(
 );
 
 passport.serializeUser((user, done) => {
+  console.log('serializeUser 방문~~ id는? ');
+  console.log(user.id);
   done(null, user.id);
 });
 
 passport.deserializeUser(async (id, done) => {
+  console.log('deserializeUser 방문~~');
   try {
     const user = await User.findOne({ where: { id } });
     done(null, user);

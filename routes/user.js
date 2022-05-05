@@ -16,6 +16,8 @@ router
   .route('/')
   // 회원 정보 조회
   .get(async (req, res) => {
+    console.log('user get 라우터 방문 req.user : ');
+    console.log(req.user);
     // 로그인 되어 있을 때
     if (req.user) {
       const { id } = req.user.dataValues; // from user session
@@ -24,12 +26,12 @@ router
         res.json({
           id: id,
           nickname: req.user.nickname,
-          phone_number: req.user.phone_number,
+          phoneNumber: req.user.phoneNumber,
           point: req.user.point,
           type: req.user.type,
           name: req.user.name,
-          bank_name: req.user.bank_name,
-          bank_account: req.user.bank_account,
+          bankName: req.user.bankName,
+          bankAccount: req.user.bankAccount,
           src: req.user.src,
         });
       } else {
@@ -40,16 +42,18 @@ router
     }
   })
   // 회원 가입 및 회원 정보 수정
-  .patch(async (req, res) => {
-    const id = req.user.id;
+  .post(async (req, res) => {
+    console.log('세션 확인 req.user : ');
+    console.log(req.user);
+    const id = await req.user.id;
     try {
       await User.update(
         {
           nickname: req.body.nickname,
-          phone_number: req.body.phoneNumber,
+          phoneNumber: req.body.phoneNumber,
           type: req.body.type,
           name: req.body.name,
-          bank_name: req.body.bankName,
+          bankName: req.body.bankName,
           bank_account: req.body.bankAccount,
         },
         { where: { id } },

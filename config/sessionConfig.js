@@ -8,5 +8,6 @@ module.exports = {
   secret: process.env.COOKIE_SECRET,
   cookie: {
     maxAge: 24000 * 60 * 60,
+    secure: false,
   },
 };

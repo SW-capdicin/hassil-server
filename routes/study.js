@@ -3,7 +3,8 @@ const { Study, Comment } = require('../models');
 
 const router = express.Router();
 
-router.route('/')
+router
+  .route('/')
   .get(async (req, res) => {
     try {
       const studies = await Study.findAll({});
@@ -17,7 +18,6 @@ router.route('/')
     try {
       // 검증 logic 필요
       const study = await Study.create(req.body);
-      console.log(study);
       res.status(200).json(study);
     } catch (err) {
       console.error(err);
@@ -28,7 +28,7 @@ router.route('/')
 router.route('/categories/:cid').get(async (req, res) => {
   try {
     const study = await Study.findAll({
-      where: { category_id: req.params.cid },
+      where: { categoryId: req.params.cid },
     });
     console.log(study);
     res.json(study);
@@ -38,7 +38,8 @@ router.route('/categories/:cid').get(async (req, res) => {
   }
 });
 
-router.route('/:id')
+router
+  .route('/:id')
   .get(async (req, res) => {
     try {
       const study = await Study.findOne({
@@ -64,11 +65,12 @@ router.route('/:id')
     }
   });
 
-router.route('/:id/comments')
+router
+  .route('/:id/comments')
   .get(async (req, res) => {
     try {
       const comments = await Comment.findAll({
-        where: { study_id: req.params.id },
+        where: { studyId: req.params.id },
       });
       res.json(comments);
     } catch (err) {
@@ -79,8 +81,8 @@ router.route('/:id/comments')
   .post(async (req, res) => {
     try {
       const comment = await Comment.create({
-        study_id: req.params.id,
-        user_id: req.body.user_id,
+        studyId: req.params.id,
+        userId: req.body.userId,
         contents: req.body.contents,
       });
       console.log(comment);
@@ -91,7 +93,8 @@ router.route('/:id/comments')
     }
   });
 
-router.route('/:id/comments/:cid')
+router
+  .route('/:id/comments/:cid')
   .patch(async (req, res) => {
     try {
       const result = await Comment.update(

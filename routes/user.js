@@ -16,14 +16,18 @@ router
   .route('/')
   // 회원 정보 조회
   .get(async (req, res) => {
-    if (req.user) {
-      const id = req.user.id; // from user session
-      const user = await User.findOne({
-        where: { id },
-      });
-      res.send(user);
-    } else {
-      res.json({});
+    try {
+      if (req.user) {
+        const id = req.user.id; // from user session
+        const user = await User.findOne({
+          where: { id },
+        });
+        res.json(user);
+      } else {
+        res.json({});
+      }
+    } catch (e) {
+      console.error(e);
     }
   })
   // 회원 가입 및 회원 정보 수정

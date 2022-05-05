@@ -10,30 +10,18 @@ router.route('/')
       res.json(studies);
     } catch (err) {
       console.error(err);
+      res.status(400).json(err);
     }
   })
   .post(async (req, res) => {
     try {
-      const study = await Study.create({
-        category_id: req.body.category_id,
-        name: req.body.name,
-        info: req.body.info,
-        meeting_cnt: req.body.meeting_cnt,
-        start_date: req.body.start_date,
-        end_date: req.body.end_date,
-        deposit_per_person: req.body.deposit_per_person,
-        location: req.body.location,
-        operation_time: req.body.operation_time,
-        min_person: req.body.min_person,
-        max_person: req.body.max_person,
-        absent_fee: req.body.absent_fee,
-        late_fee: req.body.late_fee,
-        src: req.body.src,
-      });
+      // 검증 logic 필요
+      const study = await Study.create(req.body);
       console.log(study);
-      res.status(201).json(study);
+      res.status(200).json(study);
     } catch (err) {
       console.error(err);
+      res.status(400).json(err);
     }
   });
 
@@ -46,6 +34,7 @@ router.route('/categories/:cid').get(async (req, res) => {
     res.json(study);
   } catch (err) {
     console.error(err);
+    res.status(400).json(err);
   }
 });
 
@@ -59,6 +48,7 @@ router.route('/:id')
       res.json(study);
     } catch (err) {
       console.error(err);
+      res.status(400).json(err);
     }
   })
   .delete(async (req, res) => {
@@ -70,6 +60,7 @@ router.route('/:id')
       res.json(result);
     } catch (err) {
       console.error(err);
+      res.status(400).json(err);
     }
   });
 
@@ -82,6 +73,7 @@ router.route('/:id/comments')
       res.json(comments);
     } catch (err) {
       console.error(err);
+      res.status(400).json(err);
     }
   })
   .post(async (req, res) => {
@@ -92,9 +84,10 @@ router.route('/:id/comments')
         contents: req.body.contents,
       });
       console.log(comment);
-      res.status(201).json(comment);
+      res.status(200).json(comment);
     } catch (err) {
       console.log(err);
+      res.status(400).json(err);
     }
   });
 
@@ -111,6 +104,7 @@ router.route('/:id/comments/:cid')
       res.json(result);
     } catch (err) {
       console.log(err);
+      res.status(400).json(err);
     }
   })
   .delete(async (req, res) => {
@@ -122,6 +116,7 @@ router.route('/:id/comments/:cid')
       res.json(result);
     } catch (err) {
       console.error(err);
+      res.status(400).json(err);
     }
   });
 

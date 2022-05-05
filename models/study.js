@@ -45,7 +45,7 @@ module.exports = class Study extends Sequelize.Model {
         },
         location: {
           type: 'varchar(255)',
-          allowNull: false,
+          allowNull: true,
         },
         operationTime: {
           type: 'varchar(255)',

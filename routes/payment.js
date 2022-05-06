@@ -1,40 +1,64 @@
 const express = require('express');
 const axios = require('axios');
-
 const router = express.Router();
-
+const { sequelize, User, PointHistory } = require('../models');
 const secretKey = process.env.TOSS_SECRET_KEY;
 
 // 결제 승인 API
-// path : localhost:8080/api/payment/success
 router.get('/success', function (req, res) {
-  console.log('서버 결제승인 api 실행');
-  console.log(secretKey);
-  console.log(req.query);
+  const paymentKey = req.query.paymentKey;
+  const orderId = req.query.orderId;
+  const amount = req.query.amount;
+  const userId = req.user.id;
 
   axios
     .post(
-      'https://api.tosspayments.com/v1/payments/' + req.query.paymentKey,
+      'https://api.tosspayments.com/v1/payments/' + paymentKey,
       {
-        orderId: req.query.orderId,
-        amount: req.query.amount,
+        orderId: orderId,
+        amount: amount,
       },
       {
         headers: {
           Authorization:
-            'Basic dGVzdF9za196WExrS0V5cE5BcldtbzUwblgzbG1lYXhZRzVSOg==',
+            'Basic ' + Buffer.from(secretKey + ':').toString('base64'),
           'Content-Type': 'application/json',
         },
       },
     )
-    .then(function (response) {
-      console.log('성공!!!');
-      // TODO: 구매 완료 비즈니스 로직 구현
-      
-      res.send('success');
+    .then(async function (response) {
+      try {
+        const t = await sequelize.transaction();
+        const exUser = await User.findOne({ where: { id: userId } });
+        const newAmount = exUser.point + parseInt(amount);
+        // user의 point update
+        await User.update(
+          {
+            point: newAmount,
+          },
+          { where: { id: userId } },
+          { transaction: t },
+        );
+        // pointHistory create
+        await PointHistory.create(
+          {
+            userId: userId,
+            balance: newAmount,
+            amount: amount,
+            status: 0, // 0: 입금 1 : 출금
+          },
+          { transaction: t },
+        );
+
+        await t.commit();
+
+        res.send('success');
+      } catch (e) {
+        console.error(e);
+      }
     })
     .catch(function (e) {
-      console.log('payment error');
+      console.error(e);
       res.send('error');
     });
 });

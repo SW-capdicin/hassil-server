@@ -55,6 +55,7 @@ router.get('/success', function (req, res) {
         res.send('success');
       } catch (e) {
         console.error(e);
+        res.send('error in db create login');
       }
     })
     .catch(function (e) {

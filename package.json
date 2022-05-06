@@ -8,6 +8,8 @@
   },
   "author": "capdicin",
   "dependencies": {
+    "@tosspayments/payment-sdk": "^1.1.0",
+    "axios": "^0.27.2",
     "aws-sdk": "^2.1128.0",
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.0.0",

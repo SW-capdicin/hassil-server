@@ -1,6 +1,6 @@
 const express = require('express');
 const req = require('express/lib/request');
-const { Study, Comment, StudyMember } = require('../models');
+const { Study, Comment, StudyMember, User } = require('../models');
 
 const router = express.Router();
 
@@ -188,7 +188,16 @@ router.route('/:id/members/:mid/attendance').post(async (req, res) => {
 
 router.route('/:id/members/:mid/point').post(async (req, res) => {
   try {
-    // 여기에 포인트 환급하는 코드
+    // 여기에 환급 포인트 계산 코드
+    const refund = -0;
+
+    const studyMember = await StudyMember.findOne({
+      where: { id: req.params.mid },
+    });
+    await User.increment(
+      { point: refund },
+      { where: { id: studyMember.userID } },
+    );
 
     const result = await StudyMember.update(
       {

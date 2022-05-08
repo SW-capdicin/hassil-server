@@ -1,5 +1,5 @@
 const express = require('express');
-const { Study, Comment, StudyMember, User } = require('../models');
+const { Study, Comment, StudyMember, User, sequelize } = require('../models');
 
 const router = express.Router();
 
@@ -15,9 +15,22 @@ router
     }
   })
   .post(async (req, res) => {
+    const t = await sequelize.transaction();
+
     try {
       // 검증 logic 필요
-      const study = await Study.create(req.body);
+      const study = await Study.create(req.body, { transaction: t });
+
+      await StudyMember.create(
+        {
+          studyId: study.id,
+          userId: req.user.id,
+        },
+        { transaction: t },
+      );
+
+      await t.commit();
+
       res.status(200).json(study);
     } catch (err) {
       console.error(err);
@@ -82,7 +95,7 @@ router
     try {
       const comment = await Comment.create({
         studyId: req.params.id,
-        userId: req.body.userId,
+        userId: req.user.id,
         contents: req.body.contents,
       });
       console.log(comment);
@@ -123,24 +136,40 @@ router
     }
   });
 
+router.route('/:id/members').get(async (req, res) => {
+  try {
+    const members = await StudyMember.findAll({
+      where: { studyId: req.params.id },
+    });
+    res.json(members);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json(err);
+  }
+});
+
 router
-  .route('/:id/members')
-  .get(async (req, res) => {
+  .route('/:id/member')
+  .post(async (req, res) => {
     try {
-      const members = await StudyMember.findAll({
-        where: { studyId: req.params.id },
+      const member = await StudyMember.create({
+        studyId: req.params.id,
+        userId: req.user.id,
       });
-      res.json(members);
+      console.log(member);
+      res.status(200).json(member);
     } catch (err) {
       console.error(err);
       res.status(400).json(err);
     }
   })
-  .post(async (req, res) => {
+  .get(async (req, res) => {
     try {
-      const member = await StudyMember.create({
-        studyId: req.params.id,
-        userId: req.body.userId,
+      const member = await StudyMember.findOne({
+        where: {
+          studyId: req.params.id,
+          userId: req.user.id,
+        },
       });
       console.log(member);
       res.status(200).json(member);
@@ -150,13 +179,18 @@ router
     }
   });
 
-router.route('/:id/members/:mid').patch(async (req, res) => {
+router.route('/:id/member/discard').patch(async (req, res) => {
   try {
     const result = await StudyMember.update(
       {
         isAlive: 0,
       },
-      { where: { id: req.params.mid } },
+      {
+        where: {
+          studyId: req.params.id,
+          userId: req.user.id,
+        },
+      },
     );
     console.log(result);
     res.json(result);
@@ -166,7 +200,7 @@ router.route('/:id/members/:mid').patch(async (req, res) => {
   }
 });
 
-router.route('/:id/members/:mid/attendance').post(async (req, res) => {
+router.route('/:id/member/attendance').post(async (req, res) => {
   try {
     // 여기에 출석 인증하는 코드 필요
 
@@ -175,7 +209,12 @@ router.route('/:id/members/:mid/attendance').post(async (req, res) => {
 
     const result = await StudyMember.increment(
       { lateCnt: isLateness, absentCnt: isAbsence },
-      { where: { id: req.params.mid } },
+      {
+        where: {
+          studyId: req.params.id,
+          userId: req.user.id,
+        },
+      },
     );
     console.log(result);
     res.status(200).json(result);
@@ -185,27 +224,34 @@ router.route('/:id/members/:mid/attendance').post(async (req, res) => {
   }
 });
 
-router.route('/:id/members/:mid/point').post(async (req, res) => {
+router.route('/:id/member/point').post(async (req, res) => {
+  const t = await sequelize.transaction();
+
   try {
     // 여기에 환급 포인트 계산 코드 필요
     const refund = -0;
 
-    const studyMember = await StudyMember.findOne({
-      where: { id: req.params.mid },
-    });
     await User.increment(
       { point: refund },
-      { where: { id: studyMember.userID } },
+      { where: { id: req.user.id } },
+      { transaction: t },
     );
-
-    const result = await StudyMember.update(
+    await StudyMember.update(
       {
         isAlive: 2,
       },
-      { where: { id: req.params.mid } },
+      {
+        where: {
+          studyId: req.params.id,
+          userId: req.user.id,
+        },
+      },
+      { transaction: t },
     );
+    const result = await t.commit();
+
     console.log(result);
-    res.json(result);
+    res.status(200).json(result);
   } catch (err) {
     console.log(err);
     res.status(400).json(err);

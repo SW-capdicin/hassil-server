@@ -1,5 +1,4 @@
 const express = require('express');
-const req = require('express/lib/request');
 const { Study, Comment, StudyMember, User } = require('../models');
 
 const router = express.Router();
@@ -169,7 +168,7 @@ router.route('/:id/members/:mid').patch(async (req, res) => {
 
 router.route('/:id/members/:mid/attendance').post(async (req, res) => {
   try {
-    // 여기에 출석 인증하는 코드
+    // 여기에 출석 인증하는 코드 필요
 
     const isLateness = 0;
     const isAbsence = 0;
@@ -188,7 +187,7 @@ router.route('/:id/members/:mid/attendance').post(async (req, res) => {
 
 router.route('/:id/members/:mid/point').post(async (req, res) => {
   try {
-    // 여기에 환급 포인트 계산 코드
+    // 여기에 환급 포인트 계산 코드 필요
     const refund = -0;
 
     const studyMember = await StudyMember.findOne({

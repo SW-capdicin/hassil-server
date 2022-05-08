@@ -1,6 +1,7 @@
 const express = require('express');
 const passport = require('passport');
-const { User, PointHistory } = require('../models');
+const { User, PointHistory, sequelize } = require('../models');
+const { QueryTypes } = require('sequelize');
 require('dotenv').config();
 
 const router = express.Router();
@@ -69,6 +70,21 @@ router.post('/logout', (req, res, next) => {
     res.status(200).end();
   } catch (err) {
     next(err);
+  }
+});
+
+router.get('/studies', async (req, res) => {
+  try {
+    const uid = req.user.id;
+    const studies = await sequelize.query(
+      'SELECT * FROM study WHERE id IN (SELECT studyId FROM studymember WHERE userId=:uid)',
+      { replacements: { uid }, type: QueryTypes.SELECT },
+    );
+    res.json(studies);
+    res.status(200).end();
+  } catch (err) {
+    console.error(err);
+    res.status(400).json(err);
   }
 });
 

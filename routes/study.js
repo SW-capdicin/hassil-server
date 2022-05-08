@@ -26,7 +26,17 @@ router
       // study member create
 
       // 검증 logic 필요
-      const study = await Study.create(req.body);
+      const t = await sequelize.transaction();
+
+      const study = await Study.create(req.body, { transaction: t });
+
+      await StudyMember.create(
+        { studyId: study.id, userId: req.user.id },
+        { transaction: t },
+      );
+
+      await t.commit();
+
       res.status(200).json(study);
     } catch (err) {
       console.error(err);
@@ -164,11 +174,14 @@ router
       console.error(err);
       res.status(400).json(err);
     }
-  })
+  });
 
-  // 스터디 참여
+// 스터디 참여
+router
+  .route('/:id/member')
   .post(async (req, res) => {
     const userId = req.user.id;
+
     try {
       const t = await sequelize.transaction();
       const exUser = await User.findOne({ where: { id: userId } });
@@ -209,19 +222,29 @@ router
       console.error(err);
       res.status(400).json(err);
     }
+  })
+  .get(async (req, res) => {
+    try {
+      const member = await StudyMember.findOne({
+        where: { studyId: req.params.id, userId: req.user.id },
+      });
+      console.log(member);
+      res.status(200).json(member);
+    } catch (err) {
+      console.error(err);
+      res.status(400).json(err);
+    }
   });
 
 // 스터디 멤버 중도포기
-router.route('/:id/members/:mid').patch(async (req, res) => {
+router.route('/:id/member/drop').patch(async (req, res) => {
   try {
     // transaction 적용 필요
     // studyMember update
     // study reward ++
     const result = await StudyMember.update(
-      {
-        isAlive: 0,
-      },
-      { where: { id: req.params.mid } },
+      { isAlive: 0 },
+      { where: { studyId: req.params.id, userId: req.user.id } },
     );
     console.log(result);
     res.json(result);
@@ -232,7 +255,7 @@ router.route('/:id/members/:mid').patch(async (req, res) => {
 });
 
 // 출석 인증
-router.route('/:id/members/:mid/attendance').post(async (req, res) => {
+router.route('/:id/member/attendance').patch(async (req, res) => {
   try {
     // 여기에 출석 인증하는 코드 필요
     // transaction 적용 필요
@@ -246,7 +269,7 @@ router.route('/:id/members/:mid/attendance').post(async (req, res) => {
 
     const result = await StudyMember.increment(
       { lateCnt: isLateness, absentCnt: isAbsence },
-      { where: { id: req.params.mid } },
+      { where: { studyId: req.params.id, userId: req.user.id } },
     );
     console.log(result);
     res.status(200).json(result);
@@ -257,7 +280,9 @@ router.route('/:id/members/:mid/attendance').post(async (req, res) => {
 });
 
 // 스터디 종료 후 포인트 환급
-router.route('/:id/members/:mid/point').post(async (req, res) => {
+router.route('/:id/member/point').patch(async (req, res) => {
+  const t = await sequelize.transaction();
+
   try {
     // transaction 적용 필요
     // 최종 환급액(rewardSum) 컬럼 테이블에 추가하기
@@ -268,25 +293,23 @@ router.route('/:id/members/:mid/point').post(async (req, res) => {
     // 여기에 환급 포인트 계산 코드 필요
     const refund = -0;
 
-    const studyMember = await StudyMember.findOne({
-      where: { id: req.params.mid },
-    });
-
     // user point update
     await User.increment(
       { point: refund },
-      { where: { id: studyMember.userID } },
+      { where: { id: req.user.id } },
+      { transaction: t },
     );
 
     // studymember 환급 완료로 update
-    const result = await StudyMember.update(
-      {
-        isAlive: 2,
-      },
-      { where: { id: req.params.mid } },
+    await StudyMember.update(
+      { isAlive: 2 },
+      { where: { studyId: req.params.id, userId: req.user.id } },
+      { transaction: t },
     );
+    const result = await t.commit();
+
     console.log(result);
-    res.json(result);
+    res.status(200).json(result);
   } catch (err) {
     console.log(err);
     res.status(400).json(err);

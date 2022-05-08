@@ -22,10 +22,7 @@ router
       const study = await Study.create(req.body, { transaction: t });
 
       await StudyMember.create(
-        {
-          studyId: study.id,
-          userId: req.user.id,
-        },
+        { studyId: study.id, userId: req.user.id },
         { transaction: t },
       );
 
@@ -111,9 +108,7 @@ router
   .patch(async (req, res) => {
     try {
       const result = await Comment.update(
-        {
-          contents: req.body.contents,
-        },
+        { contents: req.body.contents },
         { where: { id: req.params.cid } },
       );
       console.log(result);
@@ -166,10 +161,7 @@ router
   .get(async (req, res) => {
     try {
       const member = await StudyMember.findOne({
-        where: {
-          studyId: req.params.id,
-          userId: req.user.id,
-        },
+        where: { studyId: req.params.id, userId: req.user.id },
       });
       console.log(member);
       res.status(200).json(member);
@@ -179,18 +171,11 @@ router
     }
   });
 
-router.route('/:id/member/discard').patch(async (req, res) => {
+router.route('/:id/member/drop').patch(async (req, res) => {
   try {
     const result = await StudyMember.update(
-      {
-        isAlive: 0,
-      },
-      {
-        where: {
-          studyId: req.params.id,
-          userId: req.user.id,
-        },
-      },
+      { isAlive: 0 },
+      { where: { studyId: req.params.id, userId: req.user.id } },
     );
     console.log(result);
     res.json(result);
@@ -200,7 +185,7 @@ router.route('/:id/member/discard').patch(async (req, res) => {
   }
 });
 
-router.route('/:id/member/attendance').post(async (req, res) => {
+router.route('/:id/member/attendance').patch(async (req, res) => {
   try {
     // 여기에 출석 인증하는 코드 필요
 
@@ -209,12 +194,7 @@ router.route('/:id/member/attendance').post(async (req, res) => {
 
     const result = await StudyMember.increment(
       { lateCnt: isLateness, absentCnt: isAbsence },
-      {
-        where: {
-          studyId: req.params.id,
-          userId: req.user.id,
-        },
-      },
+      { where: { studyId: req.params.id, userId: req.user.id } },
     );
     console.log(result);
     res.status(200).json(result);
@@ -224,7 +204,7 @@ router.route('/:id/member/attendance').post(async (req, res) => {
   }
 });
 
-router.route('/:id/member/point').post(async (req, res) => {
+router.route('/:id/member/point').patch(async (req, res) => {
   const t = await sequelize.transaction();
 
   try {
@@ -237,15 +217,8 @@ router.route('/:id/member/point').post(async (req, res) => {
       { transaction: t },
     );
     await StudyMember.update(
-      {
-        isAlive: 2,
-      },
-      {
-        where: {
-          studyId: req.params.id,
-          userId: req.user.id,
-        },
-      },
+      { isAlive: 2 },
+      { where: { studyId: req.params.id, userId: req.user.id } },
       { transaction: t },
     );
     const result = await t.commit();

@@ -71,6 +71,10 @@ module.exports = class Study extends Sequelize.Model {
           type: 'varchar(255)',
           allowNull: true,
         },
+        rewardSum: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          allowNull: true,
+        },
         createdAt: {
           type: Sequelize.DATE,
           allowNull: false,

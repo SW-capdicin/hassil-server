@@ -91,7 +91,11 @@ router
   .route('/:id')
   .get(async (req, res) => {
     const studyId = req.params.id;
+    const userId = req.user.id;
     try {
+      const member = await StudyMember.findOne({
+        where: { studyId: studyId, userId: userId },
+      });
       const aliveCnt = await StudyMember.count({
         where: {
           studyId: studyId,
@@ -100,9 +104,19 @@ router
       });
       const study = await Study.findOne({
         where: { id: studyId },
+        raw: true,
       });
       const reward = Math.floor(study.rewardSum / aliveCnt);
-      study.expectedReward = reward;
+      study.expectedReward = reward; // 프론트에서 사용할 예상환급액
+      study.aliveCnt = aliveCnt; // 프론트에서 사용할 참여 인원수
+      study.myLateCnt = member.lateCnt; // 프론트에서 사용할 나의 지각 횟수
+      study.myAbsentCnt = member.absentCnt; // 프론트에서 사용할 나의 결석 횟수
+      const myBenefit =
+        study.rewardSum -
+        member.lateCnt * study.lateFee -
+        member.absentCnt * study.absentFee;
+      study.myBenefit = myBenefit; // 프론트에서 사용할 나의 이익
+
       console.log(study);
       res.json(study);
     } catch (err) {
@@ -114,6 +128,7 @@ router
   // 스터디 글 삭제
   .delete(async (req, res) => {
     try {
+      // TODO -- 중간평가 이후
       // transaction 적용 필요
       // 잔여 point 환불 (User update)
       // pointHistory create
@@ -326,15 +341,52 @@ router.route('/:id/member/drop').patch(async (req, res) => {
   }
 });
 
+// 위도, 경도로 거리 계산해주는 함수 (임시용)
+function getDistance(lat1, lon1, lat2, lon2) {
+  if (lat1 == lat2 && lon1 == lon2) return 0;
+
+  const radLat1 = (Math.PI * lat1) / 180;
+  const radLat2 = (Math.PI * lat2) / 180;
+  const theta = lon1 - lon2;
+  const radTheta = (Math.PI * theta) / 180;
+  let dist =
+    Math.sin(radLat1) * Math.sin(radLat2) +
+    Math.cos(radLat1) * Math.cos(radLat2) * Math.cos(radTheta);
+  if (dist > 1) dist = 1;
+
+  dist = Math.acos(dist);
+  dist = (dist * 180) / Math.PI;
+  dist = dist * 60 * 1.1515 * 1.609344 * 1000;
+  if (dist < 100) dist = Math.round(dist / 10) * 10;
+  else dist = Math.round(dist / 100) * 100;
+
+  return dist;
+}
+
 // 출석 인증
 router.route('/:id/member/attendance').patch(async (req, res) => {
   try {
+    // TODO
     // 여기에 출석 인증하는 코드 필요
     // transaction 적용 필요
     // 거리비교 후 출석/지각/결석/위치불일치 판단
     // studyMember increment (lateCnt, absentCnt)
     // studyMember isalive update (잔액 부족시 중도포기로 변경)
     // study rewardSum update ++
+
+    // 거리계산 함수 성능 테스트용 코드
+    // 아주대 본관
+    // const lat1 = 37.28304709309341;
+    // const lon1 = 127.04366510804743;
+    // 아주대 팔달관
+    // const lat2 = 37.28438935993838;
+    // const lon2 = 127.04442141691622;
+
+    // 실제 거리측정 방법 : https://support.google.com/maps/answer/1628031?hl=ko&co=GENIE.Platform%3DDesktop
+
+    // console.log('***거리계산결과: ');
+    // console.log('[모범답안] 260m');
+    // console.log(getDistance(lat1, lon1, lat2, lon2));
 
     const isLateness = 0;
     const isAbsence = 0;

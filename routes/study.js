@@ -1,5 +1,12 @@
 const express = require('express');
-const { sequelize, Study, Comment, StudyMember, User } = require('../models');
+const {
+  sequelize,
+  Study,
+  Comment,
+  StudyMember,
+  User,
+  PointHistory,
+} = require('../models');
 
 const router = express.Router();
 
@@ -17,27 +24,48 @@ router
   })
   // 스터디 생성
   .post(async (req, res) => {
+    const userId = req.user.id;
     try {
-      // transaction 적용 필요
-      // point 결제 (User update)
-      // pointHistory create
-      // study create
-      // study rewardSum ++
-      // study member create
-
       // 검증 logic 필요
       const t = await sequelize.transaction();
-
-      const study = await Study.create(req.body, { transaction: t });
-
-      await StudyMember.create(
-        { studyId: study.id, userId: req.user.id },
+      const user = await User.findOne(
+        { where: { id: userId } },
         { transaction: t },
       );
 
-      await t.commit();
+      const newAmount = user.point - req.body.depositPerPerson;
 
-      res.status(200).json(study);
+      if (newAmount < 0) {
+        res.send('not enough points');
+      } else {
+        await User.update(
+          {
+            point: newAmount,
+          },
+          {
+            where: { id: userId },
+          },
+          { transaction: t },
+        );
+        await PointHistory.create(
+          {
+            userId: userId,
+            balance: newAmount,
+            amount: req.body.depositPerPerson,
+            status: 1,
+          },
+          { transaction: t },
+        );
+        const study = await Study.create(req.body, { transaction: t });
+        await StudyMember.create(
+          { studyId: study.id, userId: userId },
+          { transaction: t },
+        );
+
+        await t.commit();
+
+        res.status(200).json(study);
+      } // end of else
     } catch (err) {
       console.error(err);
       res.status(400).json(err);
@@ -184,16 +212,21 @@ router
 
     try {
       const t = await sequelize.transaction();
-      const exUser = await User.findOne({ where: { id: userId } });
-      const study = await Study.findOne({ where: { id: req.params.id } });
-      const newAmount = exUser.point - study.depositPerPerson;
+      const user = await User.findOne(
+        { where: { id: userId } },
+        { transaction: t },
+      );
+      const study = await Study.findOne(
+        { where: { id: req.params.id } },
+        { transaction: t },
+      );
+      const newAmount = user.point - study.depositPerPerson;
 
       // 이미 참여중인 경우 (already joined) 처리 필요
 
       if (newAmount < 0) {
         res.send('not enough points');
       } else {
-        // user point update-- (보증금 납부)
         await User.update(
           {
             point: newAmount,
@@ -203,10 +236,15 @@ router
           },
           { transaction: t },
         );
-        // transaction 적용 필요
-        // point history create
-        // study rewardSum ++
-        // studyMember create
+        await PointHistory.create(
+          {
+            userId: userId,
+            balance: newAmount,
+            amount: study.depositPerPerson,
+            status: 1,
+          },
+          { transaction: t },
+        );
         const member = await StudyMember.create(
           {
             studyId: req.params.id,
@@ -217,7 +255,7 @@ router
         await t.commit();
 
         res.status(200).json(member);
-      }
+      } // end of else
     } catch (err) {
       console.error(err);
       res.status(400).json(err);
@@ -238,14 +276,41 @@ router
 
 // 스터디 멤버 중도포기
 router.route('/:id/member/drop').patch(async (req, res) => {
+  const t = await sequelize.transaction();
   try {
-    // transaction 적용 필요
-    // studyMember update
-    // study reward ++
+    const userId = req.user.id;
+    const studyId = req.params.id;
+
+    const studyMember = await StudyMember.findOne(
+      {
+        where: { userId: userId, studyId: studyId },
+      },
+      { transaction: t },
+    );
+
+    const study = await Study.findOne(
+      { where: { id: studyId } },
+      { transaction: t },
+    );
+
+    const leftReward =
+      study.depositPerPerson -
+      study.lateFee * studyMember.lateCnt -
+      study.absentFee * studyMember.absentCnt;
+
+    await Study.increment(
+      { rewardSum: leftReward },
+      { where: { id: studyId } },
+      { transaction: t },
+    );
+
     const result = await StudyMember.update(
       { isAlive: 0 },
-      { where: { studyId: req.params.id, userId: req.user.id } },
+      { where: { studyId: studyId, userId: userId } },
+      { transaction: t },
     );
+
+    await t.commit();
     console.log(result);
     res.json(result);
   } catch (err) {
@@ -283,35 +348,61 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
 router.route('/:id/member/point').patch(async (req, res) => {
   const t = await sequelize.transaction();
 
+  const userId = req.user.id;
+  const studyId = req.params.id;
+
   try {
-    // transaction 적용 필요
-    // 최종 환급액(rewardSum) 컬럼 테이블에 추가하기
-    // Study rewardSum/cnt(alive) 최종환급 예상액 계산 필요
-    // User point ++
-    // studyMember 환급 완료로 update
-
-    // 여기에 환급 포인트 계산 코드 필요
-    const refund = -0;
-
-    // user point update
-    await User.increment(
-      { point: refund },
-      { where: { id: req.user.id } },
+    const user = await User.findOne(
+      {
+        where: { id: userId },
+      },
       { transaction: t },
     );
 
-    // studymember 환급 완료로 update
+    const aliveCnt = await StudyMember.count(
+      {
+        where: {
+          studyId: studyId,
+          isAlive: [1, 2],
+        },
+      },
+      { transaction: t },
+    );
+
+    const study = await Study.findOne(
+      {
+        where: {
+          id: studyId,
+        },
+      },
+      { transaction: t },
+    );
+
+    const refund = Math.floor(study.rewardSum / aliveCnt);
+    const newAmount = user.point + refund;
+
+    await User.update(
+      { point: newAmount },
+      { where: { id: userId } },
+      { transaction: t },
+    );
+
+    await PointHistory.create(
+      { userId: userId, balance: newAmount, amount: refund, status: 0 },
+      { transaction: t },
+    );
+
     await StudyMember.update(
       { isAlive: 2 },
-      { where: { studyId: req.params.id, userId: req.user.id } },
+      { where: { studyId: studyId, userId: userId } },
       { transaction: t },
     );
-    const result = await t.commit();
 
-    console.log(result);
-    res.status(200).json(result);
+    await t.commit();
+
+    res.status(200).json();
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(400).json(err);
   }
 });

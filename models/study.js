@@ -73,7 +73,7 @@ module.exports = class Study extends Sequelize.Model {
         },
         rewardSum: {
           type: Sequelize.INTEGER.UNSIGNED,
-          allowNull: true,
+          defaultValue: 0,
         },
         createdAt: {
           type: Sequelize.DATE,

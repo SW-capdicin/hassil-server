@@ -90,12 +90,19 @@ router.route('/categories/:cid').get(async (req, res) => {
 router
   .route('/:id')
   .get(async (req, res) => {
+    const studyId = req.params.id;
     try {
-      // transaction 적용 필요
-      // Study rewardSum/cnt(alive) 최종환급 예상액 추가 필요
-      const study = await Study.findOne({
-        where: { id: req.params.id },
+      const aliveCnt = await StudyMember.count({
+        where: {
+          studyId: studyId,
+          isAlive: [1, 2],
+        },
       });
+      const study = await Study.findOne({
+        where: { id: studyId },
+      });
+      const reward = Math.floor(study.rewardSum / aliveCnt);
+      study.expectedReward = reward;
       console.log(study);
       res.json(study);
     } catch (err) {

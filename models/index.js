@@ -17,6 +17,7 @@ const Reservation = require('./reservation');
 const StudyCafeImage = require('./studyCafeImage');
 const StudyRoom = require('./studyRoom');
 const StudyRoomSchedule = require('./studyRoomSchedule');
+const Meeting = require('./meeting');
 
 const db = {};
 const sequelize = new Sequelize(
@@ -42,6 +43,7 @@ db.Reservation = Reservation;
 db.StudyCafeImage = StudyCafeImage;
 db.StudyRoom = StudyRoom;
 db.StudyRoomSchedule = StudyRoomSchedule;
+db.Meeting = Meeting;
 
 User.init(sequelize);
 StudyCafe.init(sequelize);
@@ -58,6 +60,7 @@ Reservation.init(sequelize);
 StudyCafeImage.init(sequelize);
 StudyRoom.init(sequelize);
 StudyRoomSchedule.init(sequelize);
+Meeting.init(sequelize);
 
 User.associate(db);
 StudyCafe.associate(db);
@@ -74,5 +77,6 @@ Reservation.associate(db);
 StudyCafeImage.associate(db);
 StudyRoom.associate(db);
 StudyRoomSchedule.associate(db);
+Meeting.associate(db);
 
 module.exports = db;

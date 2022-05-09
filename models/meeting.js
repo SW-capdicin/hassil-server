@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize');
 
-module.exports = class Reservation extends Sequelize.Model {
+module.exports = class Meeting extends Sequelize.Model {
   static init(sequelize) {
     return super.init(
       {
@@ -11,21 +11,24 @@ module.exports = class Reservation extends Sequelize.Model {
           allowNull: false,
           unique: true,
         },
-        reservationPersonName: {
+        reservationId: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          references: {
+            model: 'Reservation',
+            key: 'id',
+          },
+        },
+        longitude: {
           type: 'varchar(45)',
           allowNull: false,
         },
-        status: {
-          type: Sequelize.INTEGER.UNSIGNED,
-          defaultValue: 0,
+        latitude: {
+          type: 'varchar(45)',
+          allowNull: false,
         },
-        lateCnt: {
-          type: Sequelize.INTEGER.UNSIGNED,
-          defaultValue: 0,
-        },
-        attendCnt: {
-          type: Sequelize.INTEGER.UNSIGNED,
-          defaultValue: 0,
+        time: {
+          type: 'datetime',
+          allowNull: false,
         },
         createdAt: {
           type: Sequelize.DATE,
@@ -40,8 +43,8 @@ module.exports = class Reservation extends Sequelize.Model {
       },
       {
         sequelize,
-        modelName: 'Reservation',
-        tableName: 'Reservation',
+        modelName: 'Meeting',
+        tableName: 'Meeting',
         charset: 'utf8',
         collate: 'utf8_general_ci',
         initialAutoIncrement: 1,
@@ -52,9 +55,5 @@ module.exports = class Reservation extends Sequelize.Model {
     );
   }
 
-  static associate(db) {
-    db.Reservation.hasMany(db.StudyRoomSchedule, {
-      foreignKey: 'reservationId',
-    });
-  }
+  static associate(db) {}
 };

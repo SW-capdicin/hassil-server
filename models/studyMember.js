@@ -31,7 +31,7 @@ module.exports = class StudyMember extends Sequelize.Model {
           type: Sequelize.INTEGER.UNSIGNED,
           defaultValue: 0,
         },
-        absentCnt: {
+        attendCnt: {
           type: Sequelize.INTEGER.UNSIGNED,
           defaultValue: 0,
         },

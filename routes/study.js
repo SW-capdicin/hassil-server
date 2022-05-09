@@ -91,11 +91,7 @@ router
   .route('/:id')
   .get(async (req, res) => {
     const studyId = req.params.id;
-    const userId = req.user.id;
     try {
-      const member = await StudyMember.findOne({
-        where: { studyId: studyId, userId: userId },
-      });
       const aliveCnt = await StudyMember.count({
         where: {
           studyId: studyId,
@@ -107,15 +103,8 @@ router
         raw: true,
       });
       const reward = Math.floor(study.rewardSum / aliveCnt);
-      study.expectedReward = reward; // 프론트에서 사용할 예상환급액
       study.aliveCnt = aliveCnt; // 프론트에서 사용할 참여 인원수
-      study.myLateCnt = member.lateCnt; // 프론트에서 사용할 나의 지각 횟수
-      study.myAbsentCnt = member.absentCnt; // 프론트에서 사용할 나의 결석 횟수
-      const myBenefit =
-        study.rewardSum -
-        member.lateCnt * study.lateFee -
-        member.absentCnt * study.absentFee;
-      study.myBenefit = myBenefit; // 프론트에서 사용할 나의 이익
+      study.expectedReward = reward; // 프론트에서 사용할 예상환급액
 
       console.log(study);
       res.json(study);
@@ -374,16 +363,14 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
     // studyMember isalive update (잔액 부족시 중도포기로 변경)
     // study rewardSum update ++
 
-    // 거리계산 함수 성능 테스트용 코드
+    // [거리 계산 관련]
+    // 실제 거리측정 방법 : https://support.google.com/maps/answer/1628031?hl=ko&co=GENIE.Platform%3DDesktop
     // 아주대 본관
     // const lat1 = 37.28304709309341;
     // const lon1 = 127.04366510804743;
     // 아주대 팔달관
     // const lat2 = 37.28438935993838;
     // const lon2 = 127.04442141691622;
-
-    // 실제 거리측정 방법 : https://support.google.com/maps/answer/1628031?hl=ko&co=GENIE.Platform%3DDesktop
-
     // console.log('***거리계산결과: ');
     // console.log('[모범답안] 260m');
     // console.log(getDistance(lat1, lon1, lat2, lon2));

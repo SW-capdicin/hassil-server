@@ -22,6 +22,16 @@ async function generateDummy() {
       bankName: '국민은행',
       bankAccount: '92929292929292',
     },
+    {
+      email: 'ysy02268@ajou.ac.kr',
+      pid: '104751642392806411583',
+      nickname: '채련',
+      phoneNumber: '01012345678',
+      type: 1,
+      name: '채련',
+      bankName: '국민은행',
+      bankAccount: '92929292929292',
+    },
   ]);
 
   await Category.bulkCreate([

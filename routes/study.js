@@ -6,6 +6,7 @@ const {
   StudyMember,
   User,
   PointHistory,
+  Reservation,
 } = require('../models');
 
 const router = express.Router();
@@ -467,5 +468,66 @@ router.route('/:id/member/point').patch(async (req, res) => {
     res.status(400).json(err);
   }
 });
+
+router
+  .route('/:id/reservations')
+  .get(async (req, res) => {
+    try {
+      const reservations = await Reservation.findAll({
+        where: { studyId: req.params.id },
+      });
+      console.log(reservations);
+      res.status(200).json(reservations);
+    } catch (err) {
+      console.log(err);
+      res.status(400).json(err);
+    }
+  })
+  .post(async (req, res) => {
+    try {
+      const reservations = await Reservation.create({
+        studyId: req.params.id,
+        reservationPersonName: req.body.reservationPersonName,
+        status: req.body.status,
+      });
+      console.log(reservations);
+      res.status(200).json(reservations);
+    } catch (err) {
+      console.log(err);
+      res.status(400).json(err);
+    }
+  });
+
+router
+  .route('/:id/reservations/:rid')
+  .get(async (req, res) => {
+    try {
+      const reservation = await Reservation.findOne({
+        where: { id: req.params.rid },
+      });
+      console.log(reservation);
+      res.status(200).json(reservation);
+    } catch (err) {
+      console.log(err);
+      res.status(400).json(err);
+    }
+  })
+  .patch(async (req, res) => {
+    try {
+      const result = await Reservation.update(
+        {
+          status: req.body.status,
+        },
+        {
+          where: { id: req.params.rid },
+        },
+      );
+      console.log(result);
+      res.status(200).json(result);
+    } catch (err) {
+      console.log(err);
+      res.status(400).json(err);
+    }
+  });
 
 module.exports = router;

@@ -1,6 +1,29 @@
-const { sequelize, Category, Study } = require('../models');
+const { sequelize, User, Category, Study } = require('../models');
 
 async function generateDummy() {
+  await User.bulkCreate([
+    {
+      email: 'gus6359@gmail.com',
+      pid: '118208928285494419963',
+      nickname: '주현',
+      phoneNumber: '01012345678',
+      type: 1,
+      name: '주현',
+      bankName: '국민은행',
+      bankAccount: '92929292929292',
+    },
+    {
+      email: 'dlsxjzld@ajou.ac.kr',
+      pid: '105701619520345911333',
+      nickname: '종욱',
+      phoneNumber: '01012345678',
+      type: 1,
+      name: '종욱',
+      bankName: '국민은행',
+      bankAccount: '92929292929292',
+    },
+  ]);
+
   await Category.bulkCreate([
     { name: '코딩' },
     { name: '영어' },

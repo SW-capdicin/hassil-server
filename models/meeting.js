@@ -26,7 +26,11 @@ module.exports = class Meeting extends Sequelize.Model {
           type: 'varchar(45)',
           allowNull: false,
         },
-        time: {
+        address: {
+          type: 'varchar(45)',
+          allowNull: false,
+        },
+        startTime: {
           type: 'datetime',
           allowNull: false,
         },
@@ -55,5 +59,9 @@ module.exports = class Meeting extends Sequelize.Model {
     );
   }
 
-  static associate(db) {}
+  static associate(db) {
+    db.Meeting.belongsTo(db.Reservation, {
+      foreignKey: 'reservationId',
+    });
+  }
 };

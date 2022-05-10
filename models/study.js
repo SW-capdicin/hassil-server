@@ -107,7 +107,7 @@ module.exports = class Study extends Sequelize.Model {
     db.Study.hasMany(db.Comment, {
       foreignKey: 'studyId',
     });
-    db.Study.hasMany(db.Meeting, {
+    db.Study.hasMany(db.Reservation, {
       foreignKey: 'studyId',
     });
     db.Study.belongsTo(db.Category, {

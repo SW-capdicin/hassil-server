@@ -11,6 +11,14 @@ module.exports = class Reservation extends Sequelize.Model {
           allowNull: false,
           unique: true,
         },
+        studyId: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          references: {
+            model: 'Study',
+            key: 'id',
+          },
+          onDelete: 'CASCADE',
+        },
         reservationPersonName: {
           type: 'varchar(45)',
           allowNull: false,
@@ -19,11 +27,11 @@ module.exports = class Reservation extends Sequelize.Model {
           type: Sequelize.INTEGER.UNSIGNED,
           defaultValue: 0,
         },
-        lateCnt: {
+        attendCnt: {
           type: Sequelize.INTEGER.UNSIGNED,
           defaultValue: 0,
         },
-        attendCnt: {
+        lateCnt: {
           type: Sequelize.INTEGER.UNSIGNED,
           defaultValue: 0,
         },
@@ -54,6 +62,13 @@ module.exports = class Reservation extends Sequelize.Model {
 
   static associate(db) {
     db.Reservation.hasMany(db.StudyRoomSchedule, {
+      foreignKey: 'reservationId',
+    });
+    db.Reservation.belongsTo(db.Study, {
+      foreignKey: 'studyId',
+      onDelete: 'CASCADE',
+    });
+    db.Reservation.hasOne(db.Meeting, {
       foreignKey: 'reservationId',
     });
   }

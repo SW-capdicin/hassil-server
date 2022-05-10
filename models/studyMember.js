@@ -27,11 +27,11 @@ module.exports = class StudyMember extends Sequelize.Model {
           },
           onDelete: 'CASCADE',
         },
-        lateCnt: {
+        attendCnt: {
           type: Sequelize.INTEGER.UNSIGNED,
           defaultValue: 0,
         },
-        attendCnt: {
+        lateCnt: {
           type: Sequelize.INTEGER.UNSIGNED,
           defaultValue: 0,
         },

@@ -45,7 +45,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(cors({ 
   origin: (origin, callback) => {
-    console.log(origin);
     if (origin && whiteList.indexOf(origin) == -1) callback(new Error('Not Allowed Origin'));
     else callback(null, true);
   },

@@ -6,18 +6,24 @@ const passport = require('passport');
 const passportGoogle = require('passport-google-oauth20');
 const googleStrategyConfig = require('./config/googleStrategy');
 const sessionConfig = require('./config/sessionConfig');
-
-const { sequelize } = require('./models');
-const { User } = require('./models');
+const { sequelize, User } = require('./models');
+const { generateDummy } = require('./models/dummy');
 
 const app = express();
 app.set('port', process.env.PORT);
 
+// force가 true이면 DB reset
+const force = false;
+
 sequelize
-  .sync({ force: false })
+  .sync({ force })
   .then(() => {
     // eslint-disable-next-line no-console
     console.log('DB 연결 성공');
+
+    if (force) {
+      generateDummy();
+    }
   })
   .catch((err) => {
     // eslint-disable-next-line no-console

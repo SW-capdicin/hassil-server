@@ -16,7 +16,7 @@ router
   .get(async (req, res) => {
     try {
       const studies = await Study.findAll({});
-      res.json(studies);
+      res.status(200).json(studies);
     } catch (err) {
       console.error(err);
       res.status(400).json(err);
@@ -24,10 +24,12 @@ router
   })
   // 스터디 생성
   .post(async (req, res) => {
+    if (!req.user)
+      return res.status(400).json({ message: 'no user in session' });
+    const t = await sequelize.transaction();
     const userId = req.user.id;
     try {
       // 검증 logic 필요
-      const t = await sequelize.transaction();
       const user = await User.findOne(
         { where: { id: userId } },
         { transaction: t },
@@ -36,7 +38,7 @@ router
       const newAmount = user.point - req.body.depositPerPerson;
 
       if (newAmount < 0) {
-        res.send('not enough points');
+        res.status(400).json({ message: 'not enough points' });
       } else {
         await User.update(
           {
@@ -68,6 +70,7 @@ router
       } // end of else
     } catch (err) {
       console.error(err);
+      await t.rollback();
       res.status(400).json(err);
     }
   });
@@ -79,7 +82,7 @@ router.route('/categories/:cid').get(async (req, res) => {
       where: { categoryId: req.params.cid },
     });
     console.log(study);
-    res.json(study);
+    res.status(200).json(study);
   } catch (err) {
     console.error(err);
     res.status(400).json(err);
@@ -107,7 +110,7 @@ router
       study.expectedReward = reward; // 프론트에서 사용할 예상환급액
 
       console.log(study);
-      res.json(study);
+      res.status(200).json(study);
     } catch (err) {
       console.error(err);
       res.status(400).json(err);
@@ -126,7 +129,7 @@ router
         where: { id: req.params.id },
       });
       console.log(result);
-      res.json(result);
+      res.status(200).json(result);
     } catch (err) {
       console.error(err);
       res.status(400).json(err);
@@ -142,7 +145,7 @@ router
       const comments = await Comment.findAll({
         where: { studyId: req.params.id },
       });
-      res.json(comments);
+      res.status(200).json(comments);
     } catch (err) {
       console.error(err);
       res.status(400).json(err);
@@ -178,7 +181,7 @@ router
         { where: { id: req.params.cid } },
       );
       console.log(result);
-      res.json(result);
+      res.status(200).json(result);
     } catch (err) {
       console.log(err);
       res.status(400).json(err);
@@ -192,7 +195,7 @@ router
         where: { id: req.params.cid },
       });
       console.log(result);
-      res.json(result);
+      res.status(200).json(result);
     } catch (err) {
       console.error(err);
       res.status(400).json(err);
@@ -208,21 +211,23 @@ router
       const members = await StudyMember.findAll({
         where: { studyId: req.params.id },
       });
-      res.json(members);
+      res.status(200).json(members);
     } catch (err) {
       console.error(err);
       res.status(400).json(err);
     }
   });
 
-// 스터디 참여
 router
   .route('/:id/member')
+  // 스터디 참여
   .post(async (req, res) => {
+    if (!req.user)
+      return res.status(400).json({ message: 'no user in session' });
+    const t = await sequelize.transaction();
     const userId = req.user.id;
 
     try {
-      const t = await sequelize.transaction();
       const user = await User.findOne(
         { where: { id: userId } },
         { transaction: t },
@@ -236,7 +241,7 @@ router
       // 이미 참여중인 경우 (already joined) 처리 필요
 
       if (newAmount < 0) {
-        res.send('not enough points');
+        res.status(400).json({ message: 'not enough points' });
       } else {
         await User.update(
           {
@@ -269,10 +274,14 @@ router
       } // end of else
     } catch (err) {
       console.error(err);
+      await t.rollback();
       res.status(400).json(err);
     }
   })
+  // 스터디 멤버 조회
   .get(async (req, res) => {
+    if (!req.user)
+      return res.status(400).json({ message: 'no user in session' });
     try {
       const member = await StudyMember.findOne({
         where: { studyId: req.params.id, userId: req.user.id },
@@ -287,6 +296,7 @@ router
 
 // 스터디 멤버 중도포기
 router.route('/:id/member/drop').patch(async (req, res) => {
+  if (!req.user) return res.status(400).json({ message: 'no user in session' });
   const t = await sequelize.transaction();
   try {
     const userId = req.user.id;
@@ -304,10 +314,12 @@ router.route('/:id/member/drop').patch(async (req, res) => {
       { transaction: t },
     );
 
+    const absentCnt =
+      study.meetingCnt - studyMember.lateCnt - studyMember.attendCnt;
     const leftReward =
       study.depositPerPerson -
       study.lateFee * studyMember.lateCnt -
-      study.absentFee * studyMember.absentCnt;
+      study.absentFee * absentCnt;
 
     await Study.increment(
       { rewardSum: leftReward },
@@ -323,9 +335,10 @@ router.route('/:id/member/drop').patch(async (req, res) => {
 
     await t.commit();
     console.log(result);
-    res.json(result);
+    res.status(200).json(result);
   } catch (err) {
     console.log(err);
+    await t.rollback();
     res.status(400).json(err);
   }
 });
@@ -354,12 +367,13 @@ function getDistance(lat1, lon1, lat2, lon2) {
 
 // 출석 인증
 router.route('/:id/member/attendance').patch(async (req, res) => {
+  if (!req.user) return res.status(400).json({ message: 'no user in session' });
   try {
     // TODO
     // 여기에 출석 인증하는 코드 필요
     // transaction 적용 필요
     // 거리비교 후 출석/지각/결석/위치불일치 판단
-    // studyMember increment (lateCnt, absentCnt)
+    // studyMember increment (lateCnt, attendCnt)
     // studyMember isalive update (잔액 부족시 중도포기로 변경)
     // study rewardSum update ++
 
@@ -376,10 +390,10 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
     // console.log(getDistance(lat1, lon1, lat2, lon2));
 
     const isLateness = 0;
-    const isAbsence = 0;
+    const isAttend = 0;
 
     const result = await StudyMember.increment(
-      { lateCnt: isLateness, absentCnt: isAbsence },
+      { lateCnt: isLateness, attendCnt: isAttend },
       { where: { studyId: req.params.id, userId: req.user.id } },
     );
     console.log(result);
@@ -392,8 +406,8 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
 
 // 스터디 종료 후 포인트 환급
 router.route('/:id/member/point').patch(async (req, res) => {
+  if (!req.user) return res.status(400).json({ message: 'no user in session' });
   const t = await sequelize.transaction();
-
   const userId = req.user.id;
   const studyId = req.params.id;
 
@@ -449,6 +463,7 @@ router.route('/:id/member/point').patch(async (req, res) => {
     res.status(200).json();
   } catch (err) {
     console.error(err);
+    await t.rollback();
     res.status(400).json(err);
   }
 });

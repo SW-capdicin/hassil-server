@@ -27,13 +27,13 @@ module.exports = class Reservation extends Sequelize.Model {
           type: Sequelize.INTEGER.UNSIGNED,
           defaultValue: 0,
         },
-        longitude: {
-          type: 'varchar(45)',
-          allowNull: true,
+        attendCnt: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          defaultValue: 0,
         },
-        latitude: {
-          type: 'varchar(45)',
-          allowNull: true,
+        lateCnt: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          defaultValue: 0,
         },
         createdAt: {
           type: Sequelize.DATE,
@@ -61,11 +61,14 @@ module.exports = class Reservation extends Sequelize.Model {
   }
 
   static associate(db) {
+    db.Reservation.hasMany(db.StudyRoomSchedule, {
+      foreignKey: 'reservationId',
+    });
     db.Reservation.belongsTo(db.Study, {
       foreignKey: 'studyId',
       onDelete: 'CASCADE',
     });
-    db.Reservation.hasMany(db.StudyRoomSchedule, {
+    db.Reservation.hasOne(db.Meeting, {
       foreignKey: 'reservationId',
     });
   }

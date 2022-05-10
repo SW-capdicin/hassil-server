@@ -6,6 +6,7 @@ const secretKey = process.env.TOSS_SECRET_KEY;
 
 // 결제 승인 API
 router.get('/success', function (req, res) {
+  if (!req.user) return res.status(400).json({ message: 'no user in session' });
   const paymentKey = req.query.paymentKey;
   const orderId = req.query.orderId;
   const amount = req.query.amount;
@@ -27,8 +28,8 @@ router.get('/success', function (req, res) {
       },
     )
     .then(async function (response) {
+      const t = await sequelize.transaction();
       try {
-        const t = await sequelize.transaction();
         const exUser = await User.findOne({ where: { id: userId } });
         const newAmount = exUser.point + parseInt(amount);
         // user의 point update
@@ -51,21 +52,23 @@ router.get('/success', function (req, res) {
         );
 
         await t.commit();
-
-        res.send('success');
-      } catch (e) {
-        console.error(e);
-        res.send('error in db logic');
+        res.status(200).json({ message: 'success' });
+      } catch (err) {
+        console.error(err);
+        await t.rollback();
+        res.status(400).json({ message: 'error in db logic' });
       }
     })
-    .catch(function (e) {
-      console.error(e);
-      res.send('error');
+    .catch(function (err) {
+      console.error(err);
+      res.status(400).json({ message: 'error' });
     });
 });
 
 // 포인트를 현금화
 router.route('/cash').patch(async (req, res) => {
+  if (!req.user) return res.status(400).json({ message: 'no user in session' });
+  const t = await sequelize.transaction();
   const userId = req.user.id;
   const amount = req.body.amount;
 
@@ -74,10 +77,9 @@ router.route('/cash').patch(async (req, res) => {
     let newAmount = 0;
 
     if (exUser.point < amount) {
-      res.send('not enough points');
+      res.status(400).json({ message: 'not enough points' });
     } else {
       newAmount = exUser.point - parseInt(amount);
-      const t = await sequelize.transaction();
       // user의 point update
       await User.update(
         {
@@ -98,12 +100,12 @@ router.route('/cash').patch(async (req, res) => {
       );
 
       await t.commit();
-
-      res.send('success');
+      res.status(200).json({ message: 'success' });
     }
-  } catch (e) {
-    console.log(e);
-    res.send('error');
+  } catch (err) {
+    console.error(err);
+    await t.rollback();
+    res.status(400).json({ message: 'error' });
   }
 });
 

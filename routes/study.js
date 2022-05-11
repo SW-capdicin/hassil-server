@@ -488,7 +488,6 @@ router
     }
   })
   .post(async (req, res) => {
-    // Do not use it. It's still under development.
     const t = await sequelize.transaction();
     try {
       const reservation = await Reservation.create(
@@ -515,10 +514,39 @@ router
         console.log(meeting);
         res.status(200).json({ reservation, meeting });
       } else {
-        // 여기에 StudyRoomSchedule update 코드 필요
-        res.status(400).json("Do not use it. It's still under development.");
+        const result = await StudyRoomSchedule.update(
+          {
+            status: 1,
+          },
+          {
+            where: {
+              studyRoomId: req.body.studyRoomId,
+              time: req.body.time,
+              status: 0,
+            },
+          },
+          { transaction: t },
+        );
+        if (result == 0) {
+          // A result is the number of affected rows.
+          throw 'alert: This study room schedule cannot be reserved.';
+        } else {
+          await t.commit();
+          await StudyRoomSchedule.update(
+            {
+              reservationId: reservation.id,
+            },
+            {
+              where: {
+                studyRoomId: req.body.studyRoomId,
+                time: req.body.time,
+                status: 1,
+              },
+            },
+          );
+        }
+        res.status(200).json({ reservation, result });
       }
-      await t.commit();
     } catch (err) {
       await t.rollback();
       console.log(err);

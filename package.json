@@ -4,7 +4,7 @@
   "main": "app.js",
   "scripts": {
     "start": "nodemon app",
-    "deploy": "npm install && pm2 start ecosystem.config.js --only hassil-prod --env production --update-env"
+    "deploy": "npm install && pm2 start ecosystem.config.js --only hassil-prod"
   },
   "author": "capdicin",
   "dependencies": {

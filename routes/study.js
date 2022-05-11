@@ -7,6 +7,7 @@ const {
   User,
   PointHistory,
 } = require('../models');
+const Reservation = require('../models/reservation');
 
 const router = express.Router();
 
@@ -105,9 +106,15 @@ router
         where: { id: studyId },
         raw: true,
       });
+      const reservation = await Reservation.findAll({
+        where: { studyId: studyId },
+        order: [['createdAt', 'DESC']],
+        limit: 1,
+      });
       const reward = Math.floor(study.rewardSum / aliveCnt);
       study.aliveCnt = aliveCnt; // 프론트에서 사용할 참여 인원수
       study.expectedReward = reward; // 프론트에서 사용할 예상환급액
+      study.reservationId = reservation[0].id;
 
       console.log(study);
       res.status(200).json(study);

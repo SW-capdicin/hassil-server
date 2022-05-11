@@ -3,8 +3,8 @@ module.exports = {
     name: 'hassil-dev',
     script: './app.js',
     watch: true,
-    env: {
-      STAGE: 'dev',
+    env_production: {
+      STAGE: 'prod',
       NODE_ENV: 'production'
     }
   }]

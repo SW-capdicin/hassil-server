@@ -5,7 +5,7 @@ module.exports = {
     watch: true,
     env: {
       STAGE: 'dev',
-      NODE_ENV: 'development'
+      NODE_ENV: 'production'
     }
   }]
 };

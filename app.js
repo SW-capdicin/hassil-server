@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const session = require('express-session');
 const passport = require('passport');
 const passportGoogle = require('passport-google-oauth20');
+const cors = require('cors');
 const googleStrategyConfig = require('./config/googleStrategy');
 const sessionConfig = require('./config/sessionConfig');
 const { sequelize, User } = require('./models');
@@ -11,6 +12,11 @@ const { generateDummy } = require('./models/dummy');
 
 const app = express();
 app.set('port', process.env.PORT);
+
+const whiteList = [
+  'http://localhost:3000',
+  'https://www.hassil.shop'
+]
 
 // force가 true이면 DB reset
 const force = false;
@@ -37,6 +43,14 @@ app.use(cookieParser());
 app.use(session(sessionConfig));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(cors({ 
+  origin: (origin, callback) => {
+    console.log(origin);
+    if (origin && whiteList.indexOf(origin) == -1) callback(new Error('Not Allowed Origin'));
+    else callback(null, true);
+  },
+  credentials: true,
+}));
 
 const GoogleStrategy = passportGoogle.Strategy;
 passport.use(

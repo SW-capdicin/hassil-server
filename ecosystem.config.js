@@ -1,6 +1,6 @@
 module.exports = {
   apps : [{
-    name: 'hassil-dev',
+    name: 'hassil-prod',
     script: './app.js',
     watch: true,
     env_production: {

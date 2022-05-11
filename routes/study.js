@@ -7,7 +7,10 @@ const {
   User,
   PointHistory,
   Reservation,
+  Meeting,
+  StudyRoomSchedule,
 } = require('../models');
+const { Op } = require('sequelize');
 
 const router = express.Router();
 
@@ -475,6 +478,7 @@ router
     try {
       const reservations = await Reservation.findAll({
         where: { studyId: req.params.id },
+        include: [{ model: Meeting }, { model: StudyRoomSchedule }],
       });
       console.log(reservations);
       res.status(200).json(reservations);
@@ -484,15 +488,39 @@ router
     }
   })
   .post(async (req, res) => {
+    // Do not use it. It's still under development.
+    const t = await sequelize.transaction();
     try {
-      const reservations = await Reservation.create({
-        studyId: req.params.id,
-        reservationPersonName: req.body.reservationPersonName,
-        status: req.body.status,
-      });
-      console.log(reservations);
-      res.status(200).json(reservations);
+      const reservation = await Reservation.create(
+        {
+          studyId: req.params.id,
+          reservationPersonName: req.body.reservationPersonName,
+          status: req.body.status,
+        },
+        { transaction: t },
+      );
+      console.log(reservation);
+
+      if (reservation.status == 3) {
+        const meeting = await Meeting.create(
+          {
+            reservationId: reservation.id,
+            longitude: req.body.longitude,
+            latitude: req.body.latitude,
+            address: req.body.address,
+            startTime: req.body.startTime,
+          },
+          { transaction: t },
+        );
+        console.log(meeting);
+        res.status(200).json({ reservation, meeting });
+      } else {
+        // 여기에 StudyRoomSchedule update 코드 필요
+        res.status(400).json("Do not use it. It's still under development.");
+      }
+      await t.commit();
     } catch (err) {
+      await t.rollback();
       console.log(err);
       res.status(400).json(err);
     }
@@ -504,6 +532,7 @@ router
     try {
       const reservation = await Reservation.findOne({
         where: { id: req.params.rid },
+        include: [{ model: Meeting }, { model: StudyRoomSchedule }],
       });
       console.log(reservation);
       res.status(200).json(reservation);

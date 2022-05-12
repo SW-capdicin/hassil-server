@@ -421,7 +421,7 @@ router
       const reservation = await Reservation.create(
         {
           studyId: req.params.id,
-          reservationPersonName: req.body.reservationPersonName,
+          reservatingUserId: req.user.id,
         },
         { transaction: t },
       );

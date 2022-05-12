@@ -19,9 +19,13 @@ module.exports = class Reservation extends Sequelize.Model {
           },
           onDelete: 'CASCADE',
         },
-        reservationPersonName: {
-          type: 'varchar(45)',
-          allowNull: false,
+        reservatingUserId: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          references: {
+            model: 'User',
+            key: 'id',
+          },
+          onDelete: 'CASCADE',
         },
         status: {
           type: Sequelize.INTEGER.UNSIGNED,

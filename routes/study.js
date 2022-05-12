@@ -585,6 +585,18 @@ router
       console.log(err);
       res.status(400).json(err);
     }
+  })
+  .delete(async (req, res) => {
+    try {
+      const result = await Reservation.destroy({
+        where: { id: req.params.rid },
+      });
+      console.log(result);
+      res.status(200).json(result);
+    } catch (err) {
+      console.log(err);
+      res.status(400).json(err);
+    }
   });
 
 module.exports = router;

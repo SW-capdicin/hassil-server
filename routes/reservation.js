@@ -1,5 +1,6 @@
 const express = require('express');
 const moment = require('moment');
+const utils = require('./utils');
 const {
   sequelize,
   StudyMember,
@@ -9,33 +10,10 @@ const {
   StudyRoomSchedule,
   StudyRoom,
   StudyCafe,
-  User,
 } = require('../models');
 const router = express.Router();
 
-// 위도, 경도로 거리 계산해주는 함수 (임시용)
-function getDistance(lat1, lon1, lat2, lon2) {
-  if (lat1 == lat2 && lon1 == lon2) return 0;
-
-  const radLat1 = (Math.PI * lat1) / 180;
-  const radLat2 = (Math.PI * lat2) / 180;
-  const theta = lon1 - lon2;
-  const radTheta = (Math.PI * theta) / 180;
-  let dist =
-    Math.sin(radLat1) * Math.sin(radLat2) +
-    Math.cos(radLat1) * Math.cos(radLat2) * Math.cos(radTheta);
-  if (dist > 1) dist = 1;
-
-  dist = Math.acos(dist);
-  dist = (dist * 180) / Math.PI;
-  dist = dist * 60 * 1.1515 * 1.609344 * 1000;
-  if (dist < 100) dist = Math.round(dist / 10) * 10;
-  else dist = Math.round(dist / 100) * 100;
-
-  return dist;
-}
-
-// 출석 인증
+// 출석 인증 API
 router.route('/:id/member/attendance').patch(async (req, res) => {
   if (!req.user) return res.status(400).json({ message: 'no user in session' });
   const t = await sequelize.transaction();
@@ -58,11 +36,6 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
     let isAttend = 0; // 출석 여부
     let isLate = 0; // 지각 여부
 
-    const user = await User.findOne(
-      { where: { id: userId } },
-      { transaction: t },
-    );
-
     const reservation = await Reservation.findOne(
       {
         where: { id: reservationId },
@@ -72,6 +45,13 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
 
     const study = await Study.findOne(
       { where: { id: reservation.studyId } },
+      { transaction: t },
+    );
+
+    const studyMembers = await StudyMember.findAll(
+      {
+        where: { studyId: study.id },
+      },
       { transaction: t },
     );
 
@@ -113,7 +93,7 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
     const passTime = moment(targetTime).add(lateRange, 'minutes');
 
     // 사용자와 목적지의 거리 차이
-    const distance = getDistance(
+    const distance = utils.getDistance(
       currentLatitude,
       currentLongitude,
       targetLatitude,
@@ -130,30 +110,6 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
       } else {
         result = 'late';
         isLate = 1;
-
-        // 지각 포인트 납부
-        const lateFee = user.point < study.lateFee ? user.point : study.lateFee;
-
-        await User.increment(
-          { point: -lateFee },
-          { where: { id: userId } },
-          { transaction: t },
-        );
-
-        await Study.increment(
-          { rewardSum: lateFee },
-          { where: { id: study.id } },
-          { transaction: t },
-        );
-
-        // 포인트 부족시 퇴출
-        if (user.point == 0) {
-          await StudyMember.update(
-            { isAlive: 0 },
-            { where: { studyId: study.id, userId: userId } },
-            { transaction: t },
-          );
-        }
       }
       // 위치 불일치
     } else {
@@ -170,6 +126,26 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
       { where: { id: reservationId } },
       { transaction: t },
     );
+
+    // member의 남은 보증금 계산 -- 0보다 아래면 퇴출
+    for (let i = 0; i < studyMembers.length; i++) {
+      const myLeftDeposit = utils.getMyLeftDeposit(study, studyMembers[i]);
+      if (myLeftDeposit < 0) {
+        await StudyMember.update(
+          { isAlive: 0 },
+          { where: { id: studyMembers[i].id } },
+          { transaction: t },
+        );
+      }
+    }
+    // study의 rewardSum 재계산
+    const rewardSum = utils.getRewardSum(study, studyMembers);
+    await Study.update(
+      { rewardSum: rewardSum },
+      { where: { id: study.id } },
+      { transaction: t },
+    );
+
     await t.commit();
     console.log(result);
     res.status(200).json(result);

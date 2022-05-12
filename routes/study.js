@@ -1,4 +1,5 @@
 const express = require('express');
+const utils = require('./utils');
 const {
   sequelize,
   Study,
@@ -6,9 +7,8 @@ const {
   StudyMember,
   User,
   PointHistory,
+  Reservation,
 } = require('../models');
-const Reservation = require('../models/reservation');
-
 const router = express.Router();
 
 router
@@ -309,34 +309,29 @@ router.route('/:id/member/drop').patch(async (req, res) => {
     const userId = req.user.id;
     const studyId = req.params.id;
 
-    const studyMember = await StudyMember.findOne(
-      {
-        where: { userId: userId, studyId: studyId },
-      },
-      { transaction: t },
-    );
-
     const study = await Study.findOne(
       { where: { id: studyId } },
       { transaction: t },
     );
 
-    const absentCnt =
-      study.meetingCnt - studyMember.lateCnt - studyMember.attendCnt;
-    const leftReward =
-      study.depositPerPerson -
-      study.lateFee * studyMember.lateCnt -
-      study.absentFee * absentCnt;
-
-    await Study.increment(
-      { rewardSum: leftReward },
-      { where: { id: studyId } },
+    const studyMembers = await StudyMember.findAll(
+      {
+        where: { studyId: studyId },
+      },
       { transaction: t },
     );
 
     const result = await StudyMember.update(
       { isAlive: 0 },
       { where: { studyId: studyId, userId: userId } },
+      { transaction: t },
+    );
+
+    // study의 rewardSum 재계산
+    const rewardSum = utils.getRewardSum(study, studyMembers);
+    await Study.update(
+      { rewardSum: rewardSum },
+      { where: { id: studyId } },
       { transaction: t },
     );
 
@@ -387,8 +382,8 @@ router.route('/:id/member/point').patch(async (req, res) => {
     const refund = Math.floor(study.rewardSum / aliveCnt);
     const newAmount = user.point + refund;
 
-    await User.update(
-      { point: newAmount },
+    await User.increment(
+      { point: refund },
       { where: { id: userId } },
       { transaction: t },
     );

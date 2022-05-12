@@ -3,6 +3,17 @@ const { sequelize, User, Category, Study } = require('../models');
 async function generateDummy() {
   await User.bulkCreate([
     {
+      email: 'ysy02268@ajou.ac.kr',
+      pid: '104751642392806411583',
+      nickname: '채련',
+      phoneNumber: '01012345678',
+      point: 10000000,
+      type: 1,
+      name: '채련',
+      bankName: '국민은행',
+      bankAccount: '92929292929292',
+    },
+    {
       email: 'gus6359@gmail.com',
       pid: '118208928285494419963',
       nickname: '주현',
@@ -25,13 +36,13 @@ async function generateDummy() {
       bankAccount: '92929292929292',
     },
     {
-      email: 'ysy02268@ajou.ac.kr',
-      pid: '104751642392806411583',
-      nickname: '채련',
+      email: 'dydwls0669@gmail.com',
+      pid: '116712059751867590119',
+      nickname: '용진',
       phoneNumber: '01012345678',
       point: 10000000,
       type: 1,
-      name: '채련',
+      name: '용진',
       bankName: '국민은행',
       bankAccount: '92929292929292',
     },

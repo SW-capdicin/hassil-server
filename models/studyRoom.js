@@ -29,7 +29,7 @@ module.exports = class StudyRoom extends Sequelize.Model {
         },
         src: {
           type: 'varchar(255)',
-          allowNull: false,
+          allowNull: true,
         },
         createdAt: {
           type: Sequelize.DATE,

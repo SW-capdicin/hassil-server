@@ -445,6 +445,7 @@ router
           { transaction: t },
         );
         console.log(meeting);
+        await t.commit();
         res.status(200).json({ reservation, meeting });
       } else {
         const result = await StudyRoomSchedule.update(
@@ -461,6 +462,7 @@ router
             transaction: t,
           },
         );
+        console.log(result);
         if (result == 0) {
           // A result is the number of affected rows.
           throw 'alert: This study room schedule cannot be reserved.';

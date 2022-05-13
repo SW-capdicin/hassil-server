@@ -95,11 +95,10 @@ router.route('/categories/:cid').get(async (req, res) => {
 
 // 스터디 목록 조회 (가입한 스터디 목록)
 router.route('/joined').get(async (req, res) => {
-  if (!req.user)
-      return res.status(400).json({ message: 'no user in session' });
+  if (!req.user) return res.status(400).json({ message: 'no user in session' });
   try {
     const study = await Study.findAll({
-      include: [ { model: StudyMember, where: { userId: req.user.id } } ]
+      include: [{ model: StudyMember, where: { userId: req.user.id } }],
     });
     res.status(200).json(study);
   } catch (err) {
@@ -436,7 +435,7 @@ router
       const reservation = await Reservation.create(
         {
           studyId: req.params.id,
-          reservationPersonName: req.body.reservationPersonName,
+          reservatingUserId: req.user.id,
           status: req.body.status,
         },
         { transaction: t },
@@ -448,6 +447,7 @@ router
         { where: { id: req.params.id }, transaction: t },
       );
 
+      req.body.datetime = new Date(Date.parse(req.body.datetime));
       if (reservation.status == 3) {
         const meeting = await Meeting.create(
           {
@@ -455,7 +455,7 @@ router
             longitude: req.body.longitude,
             latitude: req.body.latitude,
             address: req.body.address,
-            startTime: req.body.startTime,
+            datetime: req.body.datetime,
           },
           { transaction: t },
         );
@@ -471,7 +471,7 @@ router
           {
             where: {
               studyRoomId: req.body.studyRoomId,
-              time: req.body.time,
+              datetime: req.body.datetime,
               status: 0,
             },
             transaction: t,

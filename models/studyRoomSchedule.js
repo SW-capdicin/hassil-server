@@ -27,7 +27,7 @@ module.exports = class StudyRoomSchedule extends Sequelize.Model {
           },
           onDelete: 'CASCADE',
         },
-        time: {
+        datetime: {
           type: 'datetime',
           allowNull: false,
         },

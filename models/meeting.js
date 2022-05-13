@@ -31,7 +31,7 @@ module.exports = class Meeting extends Sequelize.Model {
           type: 'varchar(45)',
           allowNull: false,
         },
-        startTime: {
+        datetime: {
           type: 'datetime',
           allowNull: false,
         },

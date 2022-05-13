@@ -8,7 +8,10 @@ const {
   User,
   PointHistory,
   Reservation,
+  Meeting,
+  StudyRoomSchedule,
 } = require('../models');
+
 const router = express.Router();
 
 router
@@ -31,10 +34,10 @@ router
     const userId = req.user.id;
     try {
       // 검증 logic 필요
-      const user = await User.findOne(
-        { where: { id: userId } },
-        { transaction: t },
-      );
+      const user = await User.findOne({
+        where: { id: userId },
+        transaction: t,
+      });
 
       const newAmount = user.point - req.body.depositPerPerson;
 
@@ -47,8 +50,8 @@ router
           },
           {
             where: { id: userId },
+            transaction: t,
           },
-          { transaction: t },
         );
         await PointHistory.create(
           {
@@ -239,10 +242,10 @@ router
         { where: { id: userId } },
         { transaction: t },
       );
-      const study = await Study.findOne(
-        { where: { id: req.params.id } },
-        { transaction: t },
-      );
+      const study = await Study.findOne({
+        where: { id: req.params.id },
+        transaction: t,
+      });
       const newAmount = user.point - study.depositPerPerson;
 
       // 이미 참여중인 경우 (already joined) 처리 필요
@@ -256,8 +259,8 @@ router
           },
           {
             where: { id: userId },
+            transaction: t,
           },
-          { transaction: t },
         );
         await PointHistory.create(
           {
@@ -309,30 +312,26 @@ router.route('/:id/member/drop').patch(async (req, res) => {
     const userId = req.user.id;
     const studyId = req.params.id;
 
-    const study = await Study.findOne(
-      { where: { id: studyId } },
-      { transaction: t },
-    );
+    const study = await Study.findOne({
+      where: { id: studyId },
+      transaction: t,
+    });
 
-    const studyMembers = await StudyMember.findAll(
-      {
-        where: { studyId: studyId },
-      },
-      { transaction: t },
-    );
+    const studyMembers = await StudyMember.findAll({
+      where: { studyId: studyId },
+      transaction: t,
+    });
 
     const result = await StudyMember.update(
       { isAlive: 0 },
-      { where: { studyId: studyId, userId: userId } },
-      { transaction: t },
+      { where: { studyId: studyId, userId: userId }, transaction: t },
     );
 
     // study의 rewardSum 재계산
     const rewardSum = utils.getRewardSum(study, studyMembers);
     await Study.update(
       { rewardSum: rewardSum },
-      { where: { id: studyId } },
-      { transaction: t },
+      { where: { id: studyId }, transaction: t },
     );
 
     await t.commit();
@@ -353,39 +352,32 @@ router.route('/:id/member/point').patch(async (req, res) => {
   const studyId = req.params.id;
 
   try {
-    const user = await User.findOne(
-      {
-        where: { id: userId },
-      },
-      { transaction: t },
-    );
+    const user = await User.findOne({
+      where: { id: userId },
+      transaction: t,
+    });
 
-    const aliveCnt = await StudyMember.count(
-      {
-        where: {
-          studyId: studyId,
-          isAlive: [1, 2],
-        },
+    const aliveCnt = await StudyMember.count({
+      where: {
+        studyId: studyId,
+        isAlive: [1, 2],
       },
-      { transaction: t },
-    );
+      transaction: t,
+    });
 
-    const study = await Study.findOne(
-      {
-        where: {
-          id: studyId,
-        },
+    const study = await Study.findOne({
+      where: {
+        id: studyId,
       },
-      { transaction: t },
-    );
+      transaction: t,
+    });
 
     const refund = Math.floor(study.rewardSum / aliveCnt);
     const newAmount = user.point + refund;
 
     await User.increment(
       { point: refund },
-      { where: { id: userId } },
-      { transaction: t },
+      { where: { id: userId }, transaction: t },
     );
 
     await PointHistory.create(
@@ -395,8 +387,7 @@ router.route('/:id/member/point').patch(async (req, res) => {
 
     await StudyMember.update(
       { isAlive: 2 },
-      { where: { studyId: studyId, userId: userId } },
-      { transaction: t },
+      { where: { studyId: studyId, userId: userId }, transaction: t },
     );
 
     await t.commit();
@@ -408,5 +399,125 @@ router.route('/:id/member/point').patch(async (req, res) => {
     res.status(400).json(err);
   }
 });
+
+router
+  .route('/:id/reservations')
+  .get(async (req, res) => {
+    try {
+      const reservations = await Reservation.findAll({
+        where: { studyId: req.params.id },
+        include: [{ model: Meeting }, { model: StudyRoomSchedule }],
+      });
+      console.log(reservations);
+      res.status(200).json(reservations);
+    } catch (err) {
+      console.log(err);
+      res.status(400).json(err);
+    }
+  })
+  .post(async (req, res) => {
+    const t = await sequelize.transaction();
+    try {
+      const reservation = await Reservation.create(
+        {
+          studyId: req.params.id,
+          reservationPersonName: req.body.reservationPersonName,
+          status: req.body.status,
+        },
+        { transaction: t },
+      );
+      console.log(reservation);
+
+      await Study.increment(
+        { meetingCnt: 1 },
+        { where: { id: req.params.id }, transaction: t },
+      );
+
+      if (reservation.status == 3) {
+        const meeting = await Meeting.create(
+          {
+            reservationId: reservation.id,
+            longitude: req.body.longitude,
+            latitude: req.body.latitude,
+            address: req.body.address,
+            startTime: req.body.startTime,
+          },
+          { transaction: t },
+        );
+        console.log(meeting);
+        res.status(200).json({ reservation, meeting });
+      } else {
+        const result = await StudyRoomSchedule.update(
+          {
+            reservationId: reservation.id,
+            status: 1,
+          },
+          {
+            where: {
+              studyRoomId: req.body.studyRoomId,
+              time: req.body.time,
+              status: 0,
+            },
+            transaction: t,
+          },
+        );
+        if (result == 0) {
+          // A result is the number of affected rows.
+          throw 'alert: This study room schedule cannot be reserved.';
+        }
+        await t.commit();
+        res.status(200).json({ reservation, result });
+      }
+    } catch (err) {
+      await t.rollback();
+      console.log(err);
+      res.status(400).json(err);
+    }
+  });
+
+router
+  .route('/:id/reservations/:rid')
+  .get(async (req, res) => {
+    try {
+      const reservation = await Reservation.findOne({
+        where: { id: req.params.rid },
+        include: [{ model: Meeting }, { model: StudyRoomSchedule }],
+      });
+      console.log(reservation);
+      res.status(200).json(reservation);
+    } catch (err) {
+      console.log(err);
+      res.status(400).json(err);
+    }
+  })
+  .patch(async (req, res) => {
+    try {
+      const result = await Reservation.update(
+        {
+          status: req.body.status,
+        },
+        {
+          where: { id: req.params.rid },
+        },
+      );
+      console.log(result);
+      res.status(200).json(result);
+    } catch (err) {
+      console.log(err);
+      res.status(400).json(err);
+    }
+  })
+  .delete(async (req, res) => {
+    try {
+      const result = await Reservation.destroy({
+        where: { id: req.params.rid },
+      });
+      console.log(result);
+      res.status(200).json(result);
+    } catch (err) {
+      console.log(err);
+      res.status(400).json(err);
+    }
+  });
 
 module.exports = router;

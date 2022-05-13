@@ -17,6 +17,7 @@ module.exports = class Meeting extends Sequelize.Model {
             model: 'Reservation',
             key: 'id',
           },
+          onDelete: 'CASCADE',
         },
         longitude: {
           type: 'varchar(45)',
@@ -62,6 +63,7 @@ module.exports = class Meeting extends Sequelize.Model {
   static associate(db) {
     db.Meeting.belongsTo(db.Reservation, {
       foreignKey: 'reservationId',
+      onDelete: 'CASCADE',
     });
   }
 };

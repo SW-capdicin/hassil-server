@@ -37,8 +37,7 @@ router.get('/success', function (req, res) {
           {
             point: newAmount,
           },
-          { where: { id: userId } },
-          { transaction: t },
+          { where: { id: userId }, transaction: t },
         );
         // pointHistory create
         await PointHistory.create(
@@ -85,8 +84,7 @@ router.route('/cash').patch(async (req, res) => {
         {
           point: newAmount,
         },
-        { where: { id: userId } },
-        { transaction: t },
+        { where: { id: userId }, transaction: t },
       );
       // pointHistory create
       await PointHistory.create(

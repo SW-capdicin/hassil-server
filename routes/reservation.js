@@ -36,41 +36,33 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
     let isAttend = 0; // 출석 여부
     let isLate = 0; // 지각 여부
 
-    const reservation = await Reservation.findOne(
-      {
-        where: { id: reservationId },
-      },
-      { transaction: t },
-    );
+    const reservation = await Reservation.findOne({
+      where: { id: reservationId },
+      transaction: t,
+    });
 
-    const study = await Study.findOne(
-      { where: { id: reservation.studyId } },
-      { transaction: t },
-    );
+    const study = await Study.findOne({
+      where: { id: reservation.studyId },
+      transaction: t,
+    });
 
-    const studyMembers = await StudyMember.findAll(
-      {
-        where: { studyId: study.id },
-      },
-      { transaction: t },
-    );
+    const studyMembers = await StudyMember.findAll({
+      where: { studyId: study.id },
+      transaction: t,
+    });
 
     // 예약 이용 모임 장소, 시간 구하기
     if (reservation.status == 0) {
-      const studyRoomSchedule = await StudyRoomSchedule.findAll(
-        {
-          where: { reservationId: reservationId },
-          order: [['time', 'ASC']],
-          limit: 1,
-        },
-        { transaction: t },
-      );
-      const studyRoom = await StudyRoom.findOne(
-        {
-          where: { id: studyRoomSchedule[0].studyRoomId },
-        },
-        { transaction: t },
-      );
+      const studyRoomSchedule = await StudyRoomSchedule.findAll({
+        where: { reservationId: reservationId },
+        order: [['time', 'ASC']],
+        limit: 1,
+        transaction: t,
+      });
+      const studyRoom = await StudyRoom.findOne({
+        where: { id: studyRoomSchedule[0].studyRoomId },
+        transaction: t,
+      });
       const studyCafe = await StudyCafe.findOne({
         where: { id: studyRoom.studyCafeId },
       });
@@ -80,10 +72,10 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
 
       // 예약 미이용 모임 장소, 시간 구하기
     } else {
-      const meeting = await Meeting.findOne(
-        { where: { reservationId: reservationId } },
-        { transaction: t },
-      );
+      const meeting = await Meeting.findOne({
+        where: { reservationId: reservationId },
+        transaction: t,
+      });
       targetLatitude = meeting.latitude;
       targetLongitude = meeting.longitude;
       targetTime = moment(meeting.startTime).subtract(9, 'hours'); // 한국 시간으로 맞추기
@@ -118,13 +110,11 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
 
     await StudyMember.increment(
       { lateCnt: isLate, attendCnt: isAttend },
-      { where: { studyId: study.id, userId: userId } },
-      { transaction: t },
+      { where: { studyId: study.id, userId: userId }, transaction: t },
     );
     await Reservation.increment(
       { lateCnt: isLate, attendCnt: isAttend },
-      { where: { id: reservationId } },
-      { transaction: t },
+      { where: { id: reservationId }, transaction: t },
     );
 
     // member의 남은 보증금 계산 -- 0보다 아래면 퇴출
@@ -133,8 +123,7 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
       if (myLeftDeposit < 0) {
         await StudyMember.update(
           { isAlive: 0 },
-          { where: { id: studyMembers[i].id } },
-          { transaction: t },
+          { where: { id: studyMembers[i].id }, transaction: t },
         );
       }
     }
@@ -142,8 +131,7 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
     const rewardSum = utils.getRewardSum(study, studyMembers);
     await Study.update(
       { rewardSum: rewardSum },
-      { where: { id: study.id } },
-      { transaction: t },
+      { where: { id: study.id }, transaction: t },
     );
 
     await t.commit();

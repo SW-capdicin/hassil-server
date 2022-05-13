@@ -238,10 +238,10 @@ router
     const userId = req.user.id;
 
     try {
-      const user = await User.findOne(
-        { where: { id: userId } },
-        { transaction: t },
-      );
+      const user = await User.findOne({
+        where: { id: userId },
+        transaction: t,
+      });
       const study = await Study.findOne({
         where: { id: req.params.id },
         transaction: t,

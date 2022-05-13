@@ -93,6 +93,21 @@ router.route('/categories/:cid').get(async (req, res) => {
   }
 });
 
+// 스터디 목록 조회 (가입한 스터디 목록)
+router.route('/joined').get(async (req, res) => {
+  if (!req.user)
+      return res.status(400).json({ message: 'no user in session' });
+  try {
+    const study = await Study.findAll({
+      include: [ { model: StudyMember, where: { userId: req.user.id } } ]
+    });
+    res.status(200).json(study);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json(err);
+  }
+});
+
 // 스터디 글 상세 조회
 router
   .route('/:id')

@@ -1,7 +1,6 @@
 const express = require('express');
 const passport = require('passport');
-const { User, PointHistory, sequelize } = require('../models');
-const { QueryTypes } = require('sequelize');
+const { User, PointHistory } = require('../models');
 require('dotenv').config();
 
 const router = express.Router();
@@ -75,23 +74,6 @@ router.post('/logout', (req, res, next) => {
     res.status(200).json({ message: 'success' });
   } catch (err) {
     next(err);
-  }
-});
-
-router.get('/studies', async (req, res) => {
-  try {
-    if (!req.user)
-      return res.status(400).json({ message: 'no user in session' });
-    const uid = req.user.id;
-    const studies = await sequelize.query(
-      'SELECT * FROM study WHERE id IN (SELECT studyId FROM studymember WHERE userId=:uid)',
-      { replacements: { uid }, type: QueryTypes.SELECT },
-    );
-    res.json(studies);
-    res.status(200).json({ message: 'success' });
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: 'error' });
   }
 });
 

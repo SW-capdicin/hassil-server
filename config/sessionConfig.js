@@ -9,5 +9,4 @@ module.exports = {
   cookie: {
     maxAge: 24000 * 60 * 60,
   },
-  sameSite: 'None'
 };

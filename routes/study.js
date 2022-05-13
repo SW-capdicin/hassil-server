@@ -422,6 +422,7 @@ router
         {
           studyId: req.params.id,
           reservationPersonName: req.body.reservationPersonName,
+          status: req.body.status,
         },
         { transaction: t },
       );

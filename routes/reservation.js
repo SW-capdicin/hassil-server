@@ -46,11 +46,6 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
       transaction: t,
     });
 
-    const studyMembers = await StudyMember.findAll({
-      where: { studyId: study.id },
-      transaction: t,
-    });
-
     // 예약 이용 모임 장소, 시간 구하기
     if (reservation.status == 0) {
       const studyRoomSchedule = await StudyRoomSchedule.findAll({
@@ -117,6 +112,12 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
       { where: { id: reservationId }, transaction: t },
     );
 
+    const studyMembers = await StudyMember.findAll({
+      where: { studyId: study.id },
+      raw: true,
+      transaction: t,
+    });
+
     // member의 남은 보증금 계산 -- 0보다 아래면 퇴출
     for (let i = 0; i < studyMembers.length; i++) {
       const myLeftDeposit = utils.getMyLeftDeposit(study, studyMembers[i]);
@@ -125,6 +126,7 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
           { isAlive: 0 },
           { where: { id: studyMembers[i].id }, transaction: t },
         );
+        studyMembers[i].isAlive = 0;
       }
     }
     // study의 rewardSum 재계산

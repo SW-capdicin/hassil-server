@@ -19,7 +19,7 @@ module.exports = class Reservation extends Sequelize.Model {
           },
           onDelete: 'CASCADE',
         },
-        reservationPersonName: {
+        reservatingUserId: {
           type: 'varchar(45)',
           allowNull: false,
         },

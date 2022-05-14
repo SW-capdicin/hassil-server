@@ -68,7 +68,7 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
       });
       targetLatitude = studyCafe.latitude;
       targetLongitude = studyCafe.longitude;
-      targetTime = moment(studyRoomSchedule.time).subtract(9, 'hours'); // 한국 시간으로 맞추기
+      targetTime = moment(studyRoomSchedule.time); // 한국 시간으로 맞추기
 
       // 예약 미이용 모임 장소, 시간 구하기
     } else {
@@ -78,7 +78,7 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
       });
       targetLatitude = meeting.latitude;
       targetLongitude = meeting.longitude;
-      targetTime = moment(meeting.startTime).subtract(9, 'hours'); // 한국 시간으로 맞추기
+      targetTime = moment(meeting.startTime); // 한국 시간으로 맞추기
     }
 
     // 지각 기준 시각 구하기

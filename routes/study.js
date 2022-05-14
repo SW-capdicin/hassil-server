@@ -123,10 +123,14 @@ router
         where: { id: studyId },
         raw: true,
       });
-
+      const joinedUsers = await StudyMember.findAll({
+        attributes: ['userId'],
+        where: { studyId: studyId },
+      });
       const reward = Math.floor(study.rewardSum / aliveCnt);
       study.aliveCnt = aliveCnt; // 프론트에서 사용할 참여 인원수
       study.expectedReward = reward; // 프론트에서 사용할 예상환급액
+      study.joinedUsers = joinedUsers; // 프론트에서 사용할 가입 멤버 리스트 (참가하기 버튼 비활성화용)
 
       console.log(study);
       res.status(200).json(study);

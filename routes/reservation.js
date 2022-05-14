@@ -78,7 +78,7 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
       });
       targetLatitude = meeting.latitude;
       targetLongitude = meeting.longitude;
-      targetTime = moment(meeting.startTime); // 한국 시간으로 맞추기
+      targetTime = moment(meeting.datetime); // 한국 시간으로 맞추기
     }
 
     // 지각 기준 시각 구하기

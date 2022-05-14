@@ -446,7 +446,6 @@ router
         { where: { id: req.params.id }, transaction: t },
       );
 
-      req.body.datetime = new Date(Date.parse(req.body.datetime));
       if (reservation.status == 3) {
         const meeting = await Meeting.create(
           {

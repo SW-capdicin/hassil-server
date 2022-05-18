@@ -11,6 +11,7 @@ const {
   Meeting,
   StudyRoomSchedule,
 } = require('../models');
+const { Op } = require('sequelize');
 
 const router = express.Router();
 
@@ -101,6 +102,26 @@ router.route('/joined').get(async (req, res) => {
       include: [{ model: StudyMember, where: { userId: req.user.id } }],
     });
     res.status(200).json(study);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json(err);
+  }
+});
+
+// 스터디 목록 조회 (검색)
+router.route('/search').get(async (req, res) => {
+  // if (!req.user) return res.status(400).json({ message: 'no user in session' });
+  const keyword = req.query.keyword;
+  console.log(keyword);
+  try {
+    const studies = await Study.findAll({
+      where: {
+        name: {
+          [Op.like]: '%' + keyword + '%',
+        },
+      },
+    });
+    res.status(200).json(studies);
   } catch (err) {
     console.error(err);
     res.status(400).json(err);

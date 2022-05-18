@@ -1,5 +1,5 @@
 const express = require('express');
-const { StudyCafe, Review } = require('../models');
+const { StudyCafe, Review, StudyRoom } = require('../models');
 
 const router = express.Router();
 
@@ -38,11 +38,11 @@ router
   .route('/:id')
   .get(async (req, res) => {
     try {
-      const studyCafes = await StudyCafe.findOne({
+      const studyCafe = await StudyCafe.findOne({
         where: { id: req.params.id },
         include: { model: Review },
       });
-      res.status(200).json(studyCafes);
+      res.status(200).json(studyCafe);
     } catch (err) {
       console.error(err);
       res.status(400).json(err);
@@ -109,5 +109,76 @@ router.route('/:id/reviews/:rid').delete(async (req, res) => {
     res.status(400).json(err);
   }
 });
+
+router
+  .route('/:id/rooms')
+  .get(async (req, res) => {
+    try {
+      const studyRooms = await StudyRoom.findAll({
+        where: { studyCafeId: req.params.id },
+      });
+      res.status(200).json(studyRooms);
+    } catch (err) {
+      console.error(err);
+      res.status(400).json(err);
+    }
+  })
+  .post(async (req, res) => {
+    try {
+      const studyRoom = await StudyRoom.create({
+        studyCafeId: req.params.id,
+        maxPerson: req.body.maxPerson,
+        pricePerHour: req.body.pricePerHour,
+        src: req.body.src,
+      });
+      res.status(200).json(studyRoom);
+    } catch (err) {
+      console.error(err);
+      res.status(400).json(err);
+    }
+  });
+
+router
+  .route('/:id/rooms/:rid')
+  .get(async (req, res) => {
+    try {
+      const studyRoom = await StudyRoom.findOne({
+        where: { id: req.params.rid },
+      });
+      res.status(200).json(studyRoom);
+    } catch (err) {
+      console.error(err);
+      res.status(400).json(err);
+    }
+  })
+  .patch(async (req, res) => {
+    try {
+      const result = await StudyRoom.update(
+        {
+          maxPerson: req.body.maxPerson,
+          pricePerHour: req.body.pricePerHour,
+          src: req.body.src,
+        },
+        {
+          where: { id: req.params.rid },
+        },
+      );
+      res.status(200).json(result);
+    } catch (err) {
+      console.error(err);
+      res.status(400).json(err);
+    }
+  })
+  .delete(async (req, res) => {
+    try {
+      const result = await StudyRoom.destroy({
+        where: { id: req.params.rid },
+      });
+      res.status(200).json(result);
+    } catch (err) {
+      console.error(err);
+      res.status(400).json(err);
+    }
+  });
 
 module.exports = router;

@@ -110,7 +110,7 @@ router.route('/joined').get(async (req, res) => {
 
 // 스터디 목록 조회 (검색)
 router.route('/search').get(async (req, res) => {
-  // if (!req.user) return res.status(400).json({ message: 'no user in session' });
+  if (!req.user) return res.status(400).json({ message: 'no user in session' });
   const keyword = req.query.keyword;
   console.log(keyword);
   try {

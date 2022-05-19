@@ -350,3 +350,600 @@ async function generateDummyForDemo() {
 }
 
 module.exports.generateDummyForDemo = generateDummyForDemo;
+
+module.exports.generateDummyReservationDefault = async () => {
+  // study, studycafe, studyroom 
+  await Study.bulkCreate([
+    {
+      id: 1000,
+      categoryId: 1,
+      name: '환승 드가자',
+      info: '코딩테스트 준비 스터디입니다.',
+      meetingCnt: 0,
+      startDate: '2022-05-14',
+      endDate: '2022-07-30',
+      depositPerPerson: 10000,
+      location: '수원역',
+      operationTime: '화, 목 19:00 - 21:00',
+      minPerson: 3,
+      maxPerson: 10,
+      absentFee: 1000,
+      lateFee: 1000,
+      src: 'https://kr.object.ncloudstorage.com/hassil-image/demo_study1_pexels-olia-danilevich-4974912.jpg',
+      rewardSum: 0,
+    }
+  ]);
+
+  await StudyCafe.bulkCreate([
+    {
+      id: 1000,
+      userId: 2,
+      latitude: 100,
+      longitude: 100,
+      address:
+      '지구 어딘가',
+      shopNumber: '050714395682',
+      name: '환승(100,100) 1000원',
+      info: '공부맛집, 합격명당 고객만족도 1위 스터디카페. 24시간, 365일 운영되는 프리미엄 스터디카페입니다.',
+      operationTime: '연중무휴',
+      rating: 4.8,
+    },
+    {
+      id: 1001,
+      userId: 2,
+      latitude: 100,
+      longitude: 100,
+      address:
+      '지구 어딘가',
+      shopNumber: '050714395682',
+      name: '환승(100, 100) 3000원',
+      info: '공부맛집, 합격명당 고객만족도 1위 스터디카페. 24시간, 365일 운영되는 프리미엄 스터디카페입니다.',
+      operationTime: '연중무휴',
+      rating: 4.8,
+    },
+    {
+      id: 1002,
+      userId: 2,
+      latitude: 200,
+      longitude: 200,
+      address:
+      '지구 어딘가',
+      shopNumber: '050714395682',
+      name: '환승(200, 200) 500원',
+      info: '공부맛집, 합격명당 고객만족도 1위 스터디카페. 24시간, 365일 운영되는 프리미엄 스터디카페입니다.',
+      operationTime: '연중무휴',
+      rating: 4.8,
+    },
+  ]);
+
+  await StudyRoom.bulkCreate([
+    {
+      id: 1000,
+      studyCafeId: 1000,
+      maxPerson: 8,
+      pricePerHour: 1000,
+      src: 'https://search.pstatic.net/common/?autoRotate=true&quality=95&type=w750&src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20210112_48%2F161043565887171O5D_JPEG%2FqFrOx9aGiMP1eYID7F31XBYJ.jpg',
+    },
+    {
+      id: 1001,
+      studyCafeId: 1000,
+      maxPerson: 8,
+      pricePerHour: 1250,
+      src: 'https://search.pstatic.net/common/?autoRotate=true&quality=95&type=w750&src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20210112_48%2F161043565887171O5D_JPEG%2FqFrOx9aGiMP1eYID7F31XBYJ.jpg',
+    },
+    {
+      id: 1002, 
+      studyCafeId: 1001,
+      maxPerson: 8,
+      pricePerHour: 3000,
+      src: 'https://search.pstatic.net/common/?autoRotate=true&quality=95&type=w750&src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20210112_48%2F161043565887171O5D_JPEG%2FqFrOx9aGiMP1eYID7F31XBYJ.jpg',
+    },
+    {
+      id: 1003, 
+      studyCafeId: 1002,
+      maxPerson: 8,
+      pricePerHour: 500,
+      src: 'https://search.pstatic.net/common/?autoRotate=true&quality=95&type=w750&src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20210112_48%2F161043565887171O5D_JPEG%2FqFrOx9aGiMP1eYID7F31XBYJ.jpg',
+    },
+  ]);
+
+}
+
+/* 최소 환승 ->
+ * 1000 스터디 00 01 02 03 04 05
+ * 정답 -> 1000원짜리 룸 6개가 예약되어야 함 
+ */
+module.exports.studyRoomScheduleTestCase1 = async () => {
+  await StudyRoomSchedule.bulkCreate([
+    // 1000원 룸 스케줄
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 00:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 01:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 02:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 03:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 04:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 05:00',
+      status: 0,
+    },
+    // 1250원 룸 스케줄
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 00:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 01:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 02:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 03:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 04:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 05:00',
+      status: 0,
+    },
+    // 3000원 룸 스케줄
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 00:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 01:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 02:00',
+      status: 0,
+    },
+  ]);
+}
+
+/* 최소 환승 -> 1000원짜리와 1250원짜리는 중간에 두 개 예약 차있고, 3000원짜리와 500원짜리가 모두 비워져 있는 상황 
+ * 정답 -> 3000원짜리 6개 예약해야함 
+ * 1000 스터디 00    02    04 05 
+ * 1250 스터디 00    02 03    05 
+ * 3000 스터디 00 01 02 03 04 05 
+ * 500  스터디 00 01 02 03 04 05 
+ */
+module.exports.studyRoomScheduleTestCase2 = async () => {
+  await StudyRoomSchedule.bulkCreate([
+    // 1000원 룸 스케줄
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 00:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 01:00',
+      status: 1,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 02:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 03:00',
+      status: 1,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 04:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 05:00',
+      status: 0,
+    },
+    // 1250원 룸 스케줄
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 00:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 01:00',
+      status: 1,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 02:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 03:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 04:00',
+      status: 1,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 05:00',
+      status: 0,
+    },
+    // 3000원 룸 스케줄
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 00:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 01:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 02:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 03:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 04:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 05:00',
+      status: 0,
+    },
+    // 500원 룸 스케줄
+    {
+      reservationId: null,
+      studyRoomId: 1003,
+      datetime: '2022-05-22 00:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1003,
+      datetime: '2022-05-22 01:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1003,
+      datetime: '2022-05-22 02:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1003,
+      datetime: '2022-05-22 03:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1003,
+      datetime: '2022-05-22 04:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1003,
+      datetime: '2022-05-22 05:00',
+      status: 0,
+    },
+  ]);
+}
+
+/* (최소 환승 정답) 3000 3000 3000 1250 1250 1000 = total 12,500 / 환승 수 2회 
+ * (최소 요금 정답) 1000 3000 1000 1000 1250 1000 = total 8,250 / 환승 수 4회 
+ * 1000 스터디 00    02 03    05
+ * 1250 스터디 00       03 04
+ * 3000 스터디 00 01 02       05
+ */
+module.exports.studyRoomScheduleTestCase3 = async () => {
+  await StudyRoomSchedule.bulkCreate([
+    // 1000원 룸 스케줄
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 00:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 02:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 03:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 05:00',
+      status: 0,
+    },
+    // 1250원 룸 스케줄
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 01:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 03:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 04:00',
+      status: 0,
+    },
+    // 3000원 룸 스케줄
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 00:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 01:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 02:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 05:00',
+      status: 0,
+    },
+  ]);
+}
+
+/* (최소 환승 정답) 1000 1250 1000 1000 1250 1000 = total 6,500 / 환승 수 4회 
+ * (최소 요금 정답) 1000 1250 1000 1000 1250 1000 = total 6,500 / 환승 수 4회 
+ * 1000 스터디 00    02 03    05 
+ * 1250 스터디    01       04    
+ * 3000 스터디    01 02       05 
+ * by. 채련 
+ */ 
+module.exports.studyRoomScheduleTestCase4 = async () => {
+  await StudyRoomSchedule.bulkCreate([
+    // 1000원 룸 스케줄
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 00:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 02:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 03:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 05:00',
+      status: 0,
+    },
+    // 1250원 룸 스케줄
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 01:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 04:00',
+      status: 0,
+    },
+    // 3000원 룸 스케줄
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 01:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 02:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 05:00',
+      status: 0,
+    },
+  ]);
+}
+
+/* (최소 환승 정답) 1000 3000 3000 1000 1000 1000 = total 10,000 / 환승 수 2회
+ * (최소 요금 정답) 1000 3000 1250 1000 1000 1000 = total 8,250 / 환승 수 3회 
+ * 기준 - 1000 스터디 00
+ * 1000 스터디 00       03 04 05
+ * 1250 스터디 00    02 03 04
+ * 3000 스터디 00 01 02       05
+ * by. 주현 
+ */
+module.exports.studyRoomScheduleTestCase5 = async () => {
+  await StudyRoomSchedule.bulkCreate([
+    // 1000원 룸 스케줄
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 00:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 03:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 04:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1000,
+      datetime: '2022-05-22 05:00',
+      status: 0,
+    },
+    // 1250원 룸 스케줄
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 00:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 02:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 03:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1001,
+      datetime: '2022-05-22 04:00',
+      status: 0,
+    },
+    // 3000원 룸 스케줄
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 00:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 01:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 02:00',
+      status: 0,
+    },
+    {
+      reservationId: null,
+      studyRoomId: 1002,
+      datetime: '2022-05-22 05:00',
+      status: 0,
+    },
+  ]);
+}

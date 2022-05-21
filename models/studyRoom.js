@@ -19,6 +19,10 @@ module.exports = class StudyRoom extends Sequelize.Model {
           },
           onDelete: 'CASCADE',
         },
+        name: {
+          type: 'varchar(45)',
+          allowNull: true,
+        },
         maxPerson: {
           type: Sequelize.INTEGER.UNSIGNED,
           allowNull: false,

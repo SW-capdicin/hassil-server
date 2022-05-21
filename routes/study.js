@@ -59,7 +59,8 @@ router
             userId: userId,
             balance: newAmount,
             amount: req.body.depositPerPerson,
-            status: 1,
+            status: 1, // 1: 포인트 출금
+            content: `보증금 (${req.body.name})`,
           },
           { transaction: t },
         );
@@ -301,7 +302,8 @@ router
             userId: userId,
             balance: newAmount,
             amount: study.depositPerPerson,
-            status: 1,
+            status: 1, // 1: 출금
+            content: `보증금 (${study.name})`,
           },
           { transaction: t },
         );
@@ -415,7 +417,13 @@ router.route('/:id/member/point').patch(async (req, res) => {
     );
 
     await PointHistory.create(
-      { userId: userId, balance: newAmount, amount: refund, status: 0 },
+      {
+        userId: userId,
+        balance: newAmount,
+        amount: refund,
+        status: 0,
+        content: `보증금 환급 (${study.name})`,
+      },
       { transaction: t },
     );
 

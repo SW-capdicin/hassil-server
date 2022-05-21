@@ -46,6 +46,7 @@ router.get('/success', function (req, res) {
             balance: newAmount,
             amount: amount,
             status: 0, // 0: 입금,  1 : 출금
+            content: `포인트 입금`,
           },
           { transaction: t },
         );

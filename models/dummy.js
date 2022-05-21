@@ -123,6 +123,7 @@ async function generateDummyForDemo() {
       balance: 0,
       amount: 0,
       status: 0,
+      content: '테스트 history',
     },
   ]);
   await Category.bulkCreate([

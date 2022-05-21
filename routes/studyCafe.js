@@ -1,5 +1,5 @@
 const express = require('express');
-const { StudyCafe, Review, StudyRoom } = require('../models');
+const { sequelize, StudyCafe, Review, StudyRoom } = require('../models');
 
 const router = express.Router();
 
@@ -15,20 +15,39 @@ router
     }
   })
   .post(async (req, res) => {
+    const t = await sequelize.transaction();
     try {
-      const studyCafe = await StudyCafe.create({
-        userId: req.user.id,
-        longitude: req.body.longitude,
-        latitude: req.body.latitude,
-        address: req.body.address,
-        shopNumber: req.body.shopNumber,
-        name: req.body.name,
-        info: req.body.info,
-        operationTime: req.body.operationTime,
-        rating: req.body.rating,
-      });
-      res.status(200).json(studyCafe);
+      const studyCafe = await StudyCafe.create(
+        {
+          userId: req.user.id,
+          longitude: req.body.longitude,
+          latitude: req.body.latitude,
+          address: req.body.address,
+          shopNumber: req.body.shopNumber,
+          name: req.body.name,
+          info: req.body.info,
+          operationTime: req.body.operationTime,
+          rating: req.body.rating,
+        },
+        { transaction: t },
+      );
+      let studyRooms;
+      for (let bodyStudyRoom of req.body.studyRooms) {
+        const studyRoom = await StudyRoom.create(
+          {
+            studyCafeId: studyCafe.id,
+            maxPerson: bodyStudyRoom.maxPerson,
+            pricePerHour: bodyStudyRoom.pricePerHour,
+            src: bodyStudyRoom.src,
+          },
+          { transaction: t },
+        );
+        studyRooms += studyRoom;
+      }
+      await t.commit();
+      res.status(200).json({ studyCafe, studyRooms });
     } catch (err) {
+      await t.rollback();
       console.error(err);
       res.status(400).json(err);
     }

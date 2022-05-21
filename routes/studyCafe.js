@@ -36,6 +36,7 @@ router
         const studyRoom = await StudyRoom.create(
           {
             studyCafeId: studyCafe.id,
+            name: bodyStudyRoom.name,
             maxPerson: bodyStudyRoom.maxPerson,
             pricePerHour: bodyStudyRoom.pricePerHour,
             src: bodyStudyRoom.src,
@@ -146,6 +147,7 @@ router
     try {
       const studyRoom = await StudyRoom.create({
         studyCafeId: req.params.id,
+        name: req.body.name,
         maxPerson: req.body.maxPerson,
         pricePerHour: req.body.pricePerHour,
         src: req.body.src,
@@ -174,6 +176,7 @@ router
     try {
       const result = await StudyRoom.update(
         {
+          name: req.body.name,
           maxPerson: req.body.maxPerson,
           pricePerHour: req.body.pricePerHour,
           src: req.body.src,

@@ -12,6 +12,7 @@ const {
   StudyRoomSchedule,
 } = require('../models');
 const { Op } = require('sequelize');
+const createMailRequest = require('./createMailRequest');
 
 const router = express.Router();
 
@@ -510,6 +511,17 @@ router
           throw 'alert: This study room schedule cannot be reserved.';
         }
         await t.commit();
+
+        const user = await User.findOne({
+          where: { id: req.user.id },
+        });
+
+        createMailRequest(
+          '예약확인 메일입니다.',
+          '${userName}님! 안녕하세요? HASSIL을 이용해 주셔서 진심으로 감사드립니다. 스터디룸 예약이 정상적으로 이루어졌습니다.',
+          user,
+        );
+
         res.status(200).json({ reservation, result });
       }
     } catch (err) {

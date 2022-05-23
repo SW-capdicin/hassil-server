@@ -10,8 +10,11 @@ const {
   Reservation,
   Meeting,
   StudyRoomSchedule,
+  StudyRoom,
+  StudyCafe,
 } = require('../models');
 const { Op } = require('sequelize');
+const createMailRequest = require('./createMailRequest');
 
 const router = express.Router();
 
@@ -510,6 +513,32 @@ router
           throw 'alert: This study room schedule cannot be reserved.';
         }
         await t.commit();
+
+        const studyRoomSchedule = await StudyRoomSchedule.findOne({
+          where: {
+            studyRoomId: req.body.studyRoomId,
+            datetime: req.body.datetime,
+          },
+        });
+        const reservation = await Reservation.findOne({
+          where: { id: studyRoomSchedule.reservationId },
+        });
+        const user = await User.findOne({
+          where: { id: reservation.reservatingUserId },
+        });
+        const studyRoom = await StudyRoom.findOne({
+          where: { id: studyRoomSchedule.studyRoomId },
+        });
+        const studyCafe = await StudyCafe.findOne({
+          where: { id: studyRoom.studyCafeId },
+        });
+        createMailRequest(
+          '예약확인 메일입니다.',
+          '${userName}님! 안녕하세요? HASSIL을 이용해 주셔서 진심으로 감사드립니다.<br/> 스터디룸 예약이 정상적으로 이루어졌습니다. 아래 예약내역을 확인해주세요.<br/><br/>',
+          +`예약자: ${user.name}, 스터디카페: ${studyCafe.name}, 스터디룸: ${studyRoom.name}, 이용일시: ${studyRoomSchedule.datetime}, 예약번호: ${studyRoomSchedule.reservationId}`,
+          user,
+        );
+
         res.status(200).json({ reservation, result });
       }
     } catch (err) {

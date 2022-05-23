@@ -52,8 +52,6 @@ router.route('/:id/').patch(async (req, res) => {
       },
     );
 
-    await t.commit();
-
     const reservation = await Reservation.findOne({
       where: { id: studyRoomSchedule.reservationId },
     });
@@ -66,12 +64,14 @@ router.route('/:id/').patch(async (req, res) => {
     const studyCafe = await StudyCafe.findOne({
       where: { id: studyRoom.studyCafeId },
     });
-    createMailRequest(
+    await createMailRequest(
       '예약거절 안내 메일입니다.',
       '${userName}님! 안녕하세요? HASSIL을 이용해 주셔서 진심으로 감사드립니다.<br/> 스터디룸 예약이 거절되었습니다. 아래 예약내역을 확인해 주세요.<br/><br/>' +
         `예약자: ${user.name}, 스터디카페: ${studyCafe.name}, 스터디룸: ${studyRoom.name}, 이용일시: ${studyRoomSchedule.datetime}, 예약번호: ${studyRoomSchedule.reservationId}`,
       user,
     );
+
+    await t.commit();
 
     console.log(result);
     res.status(200).json(result);

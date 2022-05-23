@@ -14,8 +14,8 @@ const message =
 const hmac = crypto.createHmac('sha256', secretKey);
 const signature = hmac.update(message).digest('base64');
 
-function createMailRequest(title, body, user) {
-  axios.post(
+async function createMailRequest(title, body, user) {
+  await axios.post(
     'https://mail.apigw.ntruss.com/api/v1/mails',
     {
       senderAddress: 'hassil@gmail.com',

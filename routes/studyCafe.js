@@ -27,7 +27,6 @@ router
           name: req.body.name,
           info: req.body.info,
           operationTime: req.body.operationTime,
-          rating: req.body.rating,
         },
         { transaction: t },
       );
@@ -36,7 +35,7 @@ router
         const studyRoom = await StudyRoom.create(
           {
             studyCafeId: studyCafe.id,
-            name: bodyStudyRoom.name,
+            name: bodyStudyRoom.studyRoomName,
             maxPerson: bodyStudyRoom.maxPerson,
             pricePerHour: bodyStudyRoom.pricePerHour,
             src: bodyStudyRoom.src,

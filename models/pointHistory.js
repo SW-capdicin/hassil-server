@@ -30,6 +30,10 @@ module.exports = class PointHistory extends Sequelize.Model {
           type: Sequelize.TINYINT,
           allowNull: false,
         },
+        content: {
+          type: 'varchar(255)',
+          allowNull: true,
+        },
         createdAt: {
           type: Sequelize.DATE,
           allowNull: false,

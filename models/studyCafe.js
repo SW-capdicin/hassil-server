@@ -31,6 +31,10 @@ module.exports = class StudyCafe extends Sequelize.Model {
           type: 'varchar(45)',
           allowNull: false,
         },
+        region_2depth_name: {
+          type: 'varchar(45)',
+          allowNull: false,
+        },
         shopNumber: {
           type: 'varchar(45)',
           allowNull: false,

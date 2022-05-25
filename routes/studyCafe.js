@@ -54,6 +54,20 @@ router
     }
   });
 
+router.route('/region_2depth_name/:name').get(async (req, res) => {
+  try {
+    const studyCafes = await StudyCafe.findAll({
+      where: {
+        region_2depth_name: req.params.name,
+      },
+    });
+    res.status(200).json(studyCafes);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json(err);
+  }
+});
+
 router
   .route('/:id')
   .get(async (req, res) => {

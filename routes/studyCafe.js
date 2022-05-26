@@ -1,5 +1,6 @@
 const express = require('express');
 const { sequelize, StudyCafe, Review, StudyRoom } = require('../models');
+const { Op } = require('sequelize');
 
 const router = express.Router();
 
@@ -53,6 +54,26 @@ router
       res.status(400).json(err);
     }
   });
+
+router.route('/search').get(async (req, res) => {
+  if (!req.user) return res.status(401);
+
+  const keyword = req.query.keyword;
+  console.log(keyword);
+  try {
+    const studyCafes = await StudyCafe.findAll({
+      where: {
+        name: {
+          [Op.like]: '%' + keyword + '%',
+        },
+      },
+    });
+    res.status(200).json(studyCafes);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json(err);
+  }
+});
 
 router.route('/region2DepthNames').get(async (req, res) => {
   try {

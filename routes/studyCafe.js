@@ -54,6 +54,33 @@ router
     }
   });
 
+router.route('/region2DepthNames').get(async (req, res) => {
+  try {
+    const studyCafeRegion2DepthNames = await StudyCafe.findAll({
+      attributes: ['region2DepthName'],
+      group: ['region2DepthName'],
+      raw: true,
+    });
+
+    let studyCafesList = [];
+    for (let studyCafeRegion2DepthName of studyCafeRegion2DepthNames) {
+      const region2DepthName = studyCafeRegion2DepthName.region2DepthName;
+      const studyCafes = await StudyCafe.findAll({
+        where: { region2DepthName: region2DepthName },
+      });
+      studyCafesList.push({
+        region2DepthName: region2DepthName,
+        studyCafes: studyCafes,
+      });
+    }
+    console.log(studyCafesList);
+    res.status(200).json(studyCafesList);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json(err);
+  }
+});
+
 router
   .route('/:id')
   .get(async (req, res) => {

@@ -1,5 +1,11 @@
 const express = require('express');
-const { sequelize, StudyCafe, Review, StudyRoom } = require('../models');
+const {
+  sequelize,
+  StudyCafe,
+  Review,
+  StudyRoom,
+  StudyCafeImage,
+} = require('../models');
 const { Op } = require('sequelize');
 
 const router = express.Router();
@@ -8,7 +14,9 @@ router
   .route('/')
   .get(async (req, res) => {
     try {
-      const studyCafes = await StudyCafe.findAll({});
+      const studyCafes = await StudyCafe.findAll({
+        include: { model: StudyCafeImage },
+      });
       res.status(200).json(studyCafes);
     } catch (err) {
       console.error(err);
@@ -32,6 +40,16 @@ router
         },
         { transaction: t },
       );
+
+      let studyCafeImages;
+      for (let bodyStudyCafeImage of req.body.StudyCafeImages) {
+        const StudyCafeImage = await StudyCafeImage.create({
+          studyCafeId: studyCafe.id,
+          src: bodyStudyCafeImage.src,
+        });
+        studyCafeImages += StudyCafeImage;
+      }
+
       let studyRooms;
       for (let bodyStudyRoom of req.body.studyRooms) {
         const studyRoom = await StudyRoom.create(
@@ -47,7 +65,7 @@ router
         studyRooms += studyRoom;
       }
       await t.commit();
-      res.status(200).json({ studyCafe, studyRooms });
+      res.status(200).json({ studyCafe, studyCafeImages, studyRooms });
     } catch (err) {
       await t.rollback();
       console.error(err);
@@ -59,7 +77,6 @@ router.route('/search').get(async (req, res) => {
   if (!req.user) return res.status(401);
 
   const keyword = req.query.keyword;
-  console.log(keyword);
   try {
     const studyCafes = await StudyCafe.findAll({
       where: {
@@ -67,6 +84,7 @@ router.route('/search').get(async (req, res) => {
           [Op.like]: '%' + keyword + '%',
         },
       },
+      include: { model: StudyCafeImage },
     });
     res.status(200).json(studyCafes);
   } catch (err) {
@@ -88,6 +106,7 @@ router.route('/region2DepthNames').get(async (req, res) => {
       const region2DepthName = studyCafeRegion2DepthName.region2DepthName;
       const studyCafes = await StudyCafe.findAll({
         where: { region2DepthName: region2DepthName },
+        include: { model: StudyCafeImage },
       });
       studyCafesList.push({
         region2DepthName: region2DepthName,
@@ -108,7 +127,7 @@ router
     try {
       const studyCafe = await StudyCafe.findOne({
         where: { id: req.params.id },
-        include: { model: Review },
+        include: [{ model: Review }, { model: StudyCafeImage }],
       });
       res.status(200).json(studyCafe);
     } catch (err) {

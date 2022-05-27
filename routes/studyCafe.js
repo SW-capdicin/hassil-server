@@ -32,7 +32,7 @@ router
           longitude: req.body.longitude,
           latitude: req.body.latitude,
           address: req.body.address,
-          region_2depth_name: req.body.region_2depth_name,
+          region2DepthName: req.body.region2DepthName,
           shopNumber: req.body.shopNumber,
           name: req.body.name,
           info: req.body.info,
@@ -41,16 +41,19 @@ router
         { transaction: t },
       );
 
-      let studyCafeImages;
+      let studyCafeImages = [];
       for (let bodyStudyCafeImage of req.body.StudyCafeImages) {
-        const StudyCafeImage = await StudyCafeImage.create({
-          studyCafeId: studyCafe.id,
-          src: bodyStudyCafeImage.src,
-        });
-        studyCafeImages += StudyCafeImage;
+        const studyCafeImage = await StudyCafeImage.create(
+          {
+            studyCafeId: studyCafe.id,
+            src: bodyStudyCafeImage.src,
+          },
+          { transaction: t },
+        );
+        studyCafeImages.push(studyCafeImage);
       }
 
-      let studyRooms;
+      let studyRooms = [];
       for (let bodyStudyRoom of req.body.studyRooms) {
         const studyRoom = await StudyRoom.create(
           {
@@ -62,7 +65,7 @@ router
           },
           { transaction: t },
         );
-        studyRooms += studyRoom;
+        studyRooms.push(studyRoom);
       }
       await t.commit();
       res.status(200).json({ studyCafe, studyCafeImages, studyRooms });

@@ -468,6 +468,7 @@ router
           studyId: req.params.id,
           reservatingUserId: req.user.id,
           status: req.body.status,
+          personCnt: req.body.personCnt,
         },
         { transaction: t },
       );

@@ -76,6 +76,21 @@ router
     }
   });
 
+router.route('/mine').get(async (req, res) => {
+  if (!req.user) return res.status(401);
+
+  try {
+    const study = await StudyCafe.findAll({
+      include: [{ model: Review }, { model: StudyCafeImage }],
+      where: { userId: req.user.id },
+    });
+    res.status(200).json(study);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json(err);
+  }
+});
+
 router.route('/search').get(async (req, res) => {
   if (!req.user) return res.status(401);
 

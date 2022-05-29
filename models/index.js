@@ -21,7 +21,7 @@ const Meeting = require('./meeting');
 
 const db = {};
 const sequelize = new Sequelize(
-  config.databse,
+  config.database,
   config.username,
   config.password,
   config,

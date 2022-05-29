@@ -13,6 +13,7 @@ let alternativePath = [];
 let result = [];
 let minMovingCnt = 1000000;
 let minPriceSum = 1000000;
+let message = '';
 const maxRadius = 1000; // 단위 (m)
 
 function clearGlobalVariables() {
@@ -23,6 +24,7 @@ function clearGlobalVariables() {
   alternativePath = [];
   minMovingCnt = 1000000;
   minPriceSum = 1000000;
+  message = '';
 }
 
 function clearResult() {
@@ -80,7 +82,7 @@ async function getMinimalMovingPath(
     possibleSchedules[i] = new Array();
 
     const schedules = await sequelize.query(
-      'SELECT S.id, S.studyRoomId, S.datetime, R.pricePerHour, C.name AS "studyCafeName", R.name AS "studyRoomName", C.latitude, C.longitude FROM hassil.StudyRoomSchedule S LEFT JOIN hassil.StudyRoom R ON S.studyRoomId = R.id LEFT JOIN hassil.StudyCafe C ON R.studyCafeId = C.id WHERE S.status = 0 and S.datetime = "' +
+      'SELECT S.id, S.studyRoomId, S.datetime, R.pricePerHour, C.id AS "studyCafeId", C.name AS "studyCafeName", R.name AS "studyRoomName", C.latitude, C.longitude FROM hassil.StudyRoomSchedule S LEFT JOIN hassil.StudyRoom R ON S.studyRoomId = R.id LEFT JOIN hassil.StudyCafe C ON R.studyCafeId = C.id WHERE S.status = 0 and S.datetime = "' +
         startTime.add(i, 'hours').format('YYYY-MM-DD HH:mm:ss') +
         '"',
     );
@@ -119,7 +121,7 @@ async function getMinimalCostPath(
   minCostPath = new Array();
   for (let i = 0; i < timeblocks; i++) {
     const schedules = await sequelize.query(
-      'SELECT S.id, S.studyRoomId, S.datetime, R.pricePerHour, C.name AS "studyCafeName", R.name AS "studyRoomName", C.latitude, C.longitude FROM hassil.StudyRoomSchedule S LEFT JOIN hassil.StudyRoom R ON S.studyRoomId = R.id LEFT JOIN hassil.StudyCafe C ON R.studyCafeId = C.id WHERE S.status = 0 and S.datetime = "' +
+      'SELECT S.id, S.studyRoomId, S.datetime, R.pricePerHour, C.id AS "studyCafeId", C.name AS "studyCafeName", R.name AS "studyRoomName", C.latitude, C.longitude FROM hassil.StudyRoomSchedule S LEFT JOIN hassil.StudyRoom R ON S.studyRoomId = R.id LEFT JOIN hassil.StudyCafe C ON R.studyCafeId = C.id WHERE S.status = 0 and S.datetime = "' +
         startTime.add(i, 'hours').format('YYYY-MM-DD HH:mm:ss') +
         '" ORDER BY R.pricePerHour',
     );
@@ -272,8 +274,7 @@ async function getAlternativePaths(
       latitude,
     )
   ) {
-    result.push({ number: 1 });
-    result.push(alternativePath);
+    result.push({ number1: alternativePath });
   }
   clearGlobalVariables();
   if (
@@ -286,8 +287,7 @@ async function getAlternativePaths(
       latitude,
     )
   ) {
-    result.push({ number: 2 });
-    result.push(alternativePath);
+    result.push({ number2: alternativePath });
   }
   clearGlobalVariables();
   if (
@@ -300,8 +300,7 @@ async function getAlternativePaths(
       latitude,
     )
   ) {
-    result.push({ number: 3 });
-    result.push(alternativePath);
+    result.push({ number3: alternativePath });
   }
 } // end of getAlternativePaths()
 
@@ -315,14 +314,14 @@ async function getResult(
 ) {
   if (option == 0) {
     await getMinimalCostPath(radius, startTime, endTime, longitude, latitude);
-    result.push(minCostPath);
+    result = minCostPath;
   } else if (option == 1) {
     await getMinimalMovingPath(radius, startTime, endTime, longitude, latitude);
-    result.push(minMovingPath);
+    result = minMovingPath;
   }
 
-  if (result[0] && result[0].length == timeblocks) {
-    result.push({ message: 'path exists' });
+  if (result && result.length == timeblocks) {
+    message = 'path exists';
   } else {
     clearResult();
     await getAlternativePaths(
@@ -334,9 +333,9 @@ async function getResult(
       latitude,
     );
     if (result.length == 0) {
-      result.push({ message: 'cannot find anything' });
+      message = 'cannot find anything';
     } else {
-      result.push({ message: 'how about these' });
+      message = 'how about these';
     }
   }
 } // end of getResult()
@@ -345,6 +344,7 @@ async function getResult(
 // http://localhost:8080/api/scheduleRecommend/
 router.route('/').post(async (req, res) => {
   try {
+    let answer;
     clearGlobalVariables();
     clearResult();
 
@@ -357,11 +357,15 @@ router.route('/').post(async (req, res) => {
       req.body.latitude,
     );
 
-    result.push({ latitude: req.body.latitude });
-    result.push({ longitude: req.body.longitude });
-    result.push({ radius: req.body.radius });
+    answer = {
+      latitude: req.body.latitude,
+      longitude: req.body.longitude,
+      radius: req.body.radius,
+      message: message,
+      schedule: result,
+    };
 
-    res.status(200).json(result);
+    res.status(200).json(answer);
   } catch (err) {
     console.error(err);
     res.status(400).json({ message: 'error' });

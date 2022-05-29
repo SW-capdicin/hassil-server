@@ -13,10 +13,7 @@ const { generateDummy } = require('./models/dummy');
 const app = express();
 app.set('port', process.env.PORT);
 
-const whiteList = [
-  'http://localhost:3000',
-  'https://www.hassil.shop'
-]
+const whiteList = ['http://localhost:3000', 'https://www.hassil.shop'];
 
 // force가 true이면 DB reset
 const force = false;
@@ -43,14 +40,17 @@ app.use(cookieParser());
 app.use(session(sessionConfig));
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(cors({ 
-  origin: (origin, callback) => {
-    console.log(origin);
-    if (origin && whiteList.indexOf(origin) == -1) callback(new Error('Not Allowed Origin'));
-    else callback(null, true);
-  },
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      console.log(origin);
+      if (origin && whiteList.indexOf(origin) == -1)
+        callback(new Error('Not Allowed Origin'));
+      else callback(null, true);
+    },
+    credentials: true,
+  }),
+);
 
 const GoogleStrategy = passportGoogle.Strategy;
 passport.use(
@@ -91,6 +91,7 @@ passport.deserializeUser(async (id, done) => {
 });
 
 app.use('/api', require('./routes'));
+app.use('/test', require('./tests/unit'));
 
 app.use((req, res, next) => {
   const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);

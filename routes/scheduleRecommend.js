@@ -2,21 +2,32 @@ const express = require('express');
 const moment = require('moment');
 const utils = require('./utils');
 const { sequelize } = require('../models');
-const {
-  studyRoomScheduleTestCase1,
-  studyRoomScheduleTestCase2,
-  studyRoomScheduleTestCase3,
-  studyRoomScheduleTestCase4,
-  studyRoomScheduleTestCase5,
-} = require('../models/dummy');
 const router = express.Router();
 
 // global variables
 let timeblocks;
-let arr;
+let possibleSchedules;
+let minCostPath;
+let minMovingPath;
+let alternativePath = [];
+let result = [];
 let minMovingCnt = 1000000;
 let minPriceSum = 1000000;
-let minPath;
+const maxRadius = 1000; // 단위 (m)
+
+function clearGlobalVariables() {
+  timeblocks = null;
+  possibleSchedules = null;
+  minCostPath = null;
+  minMovingPath = null;
+  alternativePath = [];
+  minMovingCnt = 1000000;
+  minPriceSum = 1000000;
+}
+
+function clearResult() {
+  result = [];
+}
 
 function dfs(path, nextTime, priceSum, moveSum) {
   if (path.length == timeblocks) {
@@ -26,9 +37,9 @@ function dfs(path, nextTime, priceSum, moveSum) {
     ) {
       minMovingCnt = moveSum;
       minPriceSum = priceSum;
-      minPath = new Array();
+      minMovingPath = new Array();
       for (let j = 0; j < path.length; j++) {
-        minPath.push(path[j]); // deep copy
+        minMovingPath.push(path[j]); // deep copy
       }
     }
     return;
@@ -39,174 +50,318 @@ function dfs(path, nextTime, priceSum, moveSum) {
     return;
   }
 
-  for (let i = 0; i < arr[nextTime].length; i++) {
+  for (let i = 0; i < possibleSchedules[nextTime].length; i++) {
     const m =
-      arr[nextTime][i].studyRoomId == path[path.length - 1].studyRoomId ? 0 : 1;
-    path.push(arr[nextTime][i]);
+      possibleSchedules[nextTime][i].studyRoomId ==
+      path[path.length - 1].studyRoomId
+        ? 0
+        : 1;
+    path.push(possibleSchedules[nextTime][i]);
     dfs(
       path,
       nextTime + 1,
-      priceSum + arr[nextTime][i].pricePerHour,
+      priceSum + possibleSchedules[nextTime][i].pricePerHour,
       moveSum + m,
     );
     path.pop();
   } // end of for i
 } // end of dfs()
 
-function getMinimalMoving() {
-  for (let i = 0; i < arr[0].length; i++) {
+async function getMinimalMovingPath(
+  radius,
+  startTime,
+  endTime,
+  longitude,
+  latitude,
+) {
+  timeblocks = moment.duration(endTime.diff(startTime)).asHours(); // 시간차
+  possibleSchedules = new Array(timeblocks);
+  for (let i = 0; i < timeblocks; i++) {
+    possibleSchedules[i] = new Array();
+
+    const schedules = await sequelize.query(
+      'SELECT S.id, S.studyRoomId, S.datetime, R.pricePerHour, C.name AS "studyCafeName", R.name AS "studyRoomName", C.latitude, C.longitude FROM hassil.StudyRoomSchedule S LEFT JOIN hassil.StudyRoom R ON S.studyRoomId = R.id LEFT JOIN hassil.StudyCafe C ON R.studyCafeId = C.id WHERE S.status = 0 and S.datetime = "' +
+        startTime.add(i, 'hours').format('YYYY-MM-DD HH:mm:ss') +
+        '"',
+    );
+    startTime.subtract(i, 'hours');
+
+    for (let j = 0; j < schedules[0].length; j++) {
+      if (
+        utils.getDistance(
+          latitude,
+          longitude,
+          schedules[0][j].latitude,
+          schedules[0][j].longitude,
+        ) <= radius
+      ) {
+        possibleSchedules[i].push(schedules[0][j]);
+      }
+    } // end of for j
+  } // end of for i
+
+  for (let i = 0; i < possibleSchedules[0].length; i++) {
     let path = new Array();
-    path.push(arr[0][i]);
-    dfs(path, 1, arr[0][i].pricePerHour, 0);
+    path.push(possibleSchedules[0][i]);
+    dfs(path, 1, possibleSchedules[0][i].pricePerHour, 0);
     path.pop();
   }
-} // end of getMinimalMoving()
+} // end of getMinimalMovingPath()
 
-// test dataset API
-router.route('/dummy').get(async (req, res) => {
-  try {
-    // study room schedule test case 생성 (답 맞추면 table delete 후 다음 test case)
+async function getMinimalCostPath(
+  radius,
+  startTime,
+  endTime,
+  longitude,
+  latitude,
+) {
+  timeblocks = moment.duration(endTime.diff(startTime)).asHours();
+  minCostPath = new Array();
+  for (let i = 0; i < timeblocks; i++) {
+    const schedules = await sequelize.query(
+      'SELECT S.id, S.studyRoomId, S.datetime, R.pricePerHour, C.name AS "studyCafeName", R.name AS "studyRoomName", C.latitude, C.longitude FROM hassil.StudyRoomSchedule S LEFT JOIN hassil.StudyRoom R ON S.studyRoomId = R.id LEFT JOIN hassil.StudyCafe C ON R.studyCafeId = C.id WHERE S.status = 0 and S.datetime = "' +
+        startTime.add(i, 'hours').format('YYYY-MM-DD HH:mm:ss') +
+        '" ORDER BY R.pricePerHour',
+    );
+    startTime.subtract(i, 'hours');
 
-    // 조건
-    // 기준 시간 : 5월 20일 00시 ~ 5월 20일 06시
-    // 반경 : 500m
-    // 위도 경도 : 100, 100
+    for (let j = 0; j < schedules[0].length; j++) {
+      if (
+        utils.getDistance(
+          latitude,
+          longitude,
+          schedules[0][j].latitude,
+          schedules[0][j].longitude,
+        ) <= radius
+      ) {
+        minCostPath.push(schedules[0][j]);
+        break;
+      }
+    } // end of for j
+  } // end of for i
+} // end of getMinimalCostPath()
 
-    // studyRoomScheduleTestCase1();
-    /* (최소 환승 정답) 1000 1000 1000 1000 1000 1000
-     * (최소 요금 정답) 1000 1000 1000 1000 1000 1000
-     */
-
-    // studyRoomScheduleTestCase2();
-    /* (최소 환승 정답) 3000 3000 3000 3000 3000 3000
-     * (최소 요금 정답) 1000 3000 1000 1250 1000 1000
-     * 1000 스터디 00    02    04 05
-     * 1250 스터디 00    02 03    05
-     * 3000 스터디 00 01 02 03 04 05
-     * 500  스터디 00 01 02 03 04 05
-     */
-
-    // studyRoomScheduleTestCase3();
-    /* (최소 환승 정답) 3000 3000 3000 1250 1250 1000 = total 12,500 / 환승 수 2회
-     * (최소 요금 정답) 1000 1250 1000 1000 1250 1000 = total 8,250 / 환승 수 4회
-     * 1000 스터디 00    02 03    05
-     * 1250 스터디    01    03 04
-     * 3000 스터디 00 01 02       05
-     */
-
-    // studyRoomScheduleTestCase4();
-    /* (최소 환승 정답) 1000 1250 1000 1000 1250 1000 = total 6,500 / 환승 수 4회
-     * (최소 요금 정답) 1000 1250 1000 1000 1250 1000 = total 6,500 / 환승 수 4회
-     * 1000 스터디 00    02 03    05
-     * 1250 스터디    01       04
-     * 3000 스터디    01 02       05
-     */
-
-    // studyRoomScheduleTestCase5();
-    /* (최소 환승 정답) 3000 3000 3000 1000 1000 1000 = total 10,000 / 환승 수 2회
-     * (최소 요금 정답) 1000 3000 1250 1000 1000 1000 = total 8,250 / 환승 수 3회
-     * 기준 - 1000 스터디 00
-     * 1000 스터디 00       03 04 05
-     * 1250 스터디 00    02 03 04
-     * 3000 스터디 00 01 02       05
-     */
-
-    res.status(200).json({ message: '결과' });
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: 'error' });
+async function firstPathExists(
+  option,
+  radius,
+  startTime,
+  endTime,
+  longitude,
+  latitude,
+) {
+  if (option == 0) {
+    await getMinimalCostPath(
+      maxRadius,
+      startTime,
+      endTime,
+      longitude,
+      latitude,
+    );
+    alternativePath = minCostPath;
+  } else if (option == 1) {
+    await getMinimalMovingPath(
+      maxRadius,
+      startTime,
+      endTime,
+      longitude,
+      latitude,
+    );
+    alternativePath = minMovingPath;
   }
-});
-
-// 최소 비용 알고리즘
-// API path 예시
-// http://localhost:8080/api/scheduleRecommend/minimalCost?startTime=2022-05-22 00:00:00&endTime=2022-05-22 06:00:00&longitude=100&latitude=100
-router.route('/minimalCost').get(async (req, res) => {
-  try {
-    const startTime = moment(req.query.startTime);
-    const endTime = moment(req.query.endTime);
-    const longitude = req.query.longitude;
-    const latitude = req.query.latitude;
-
-    const distRange = 500; // 위도 경도 기준 반경 (m)
-
-    timeblocks = moment.duration(endTime.diff(startTime)).asHours(); // 시간차
-    arr = new Array(timeblocks);
-    for (let i = 0; i < timeblocks; i++) {
-      arr[i] = new Array();
-
-      const schedules = await sequelize.query(
-        'SELECT S.id, S.studyRoomId, S.datetime, R.pricePerHour, C.latitude, C.longitude FROM hassil.StudyRoomSchedule S LEFT JOIN hassil.StudyRoom R ON S.studyRoomId = R.id LEFT JOIN hassil.StudyCafe C ON R.studyCafeId = C.id WHERE S.status = 0 and S.datetime = "' +
-          startTime.add(i, 'hours').format('YYYY-MM-DD HH:mm:ss') +
-          '" ORDER BY R.pricePerHour',
-      );
-      startTime.subtract(i, 'hours');
-
-      for (let j = 0; j < schedules[0].length; j++) {
-        // 반경 distRange 이내
-        if (
-          utils.getDistance(
-            latitude,
-            longitude,
-            schedules[0][j].latitude,
-            schedules[0][j].longitude,
-          ) <= distRange
-        ) {
-          arr[i].push(schedules[0][j]);
-          break;
-        }
-      } // end of for j
-    } // end of for i
-
-    res.status(200).json(arr);
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: 'error' });
+  if (alternativePath && alternativePath.length == timeblocks) {
+    return true;
   }
-});
+  return false;
+} // end of firstPathExists()
 
-// 최소 환승 알고리즘
-// API path 예시
-// http://localhost:8080/api/scheduleRecommend/minimalMoving?startTime=2022-05-22 00:00:00&endTime=2022-05-22 06:00:00&longitude=100&latitude=100
-router.route('/minimalMoving').get(async (req, res) => {
-  try {
-    const startTime = moment(req.query.startTime);
-    const endTime = moment(req.query.endTime);
-    const longitude = req.query.longitude;
-    const latitude = req.query.latitude;
+async function secondPathExists(
+  option,
+  radius,
+  startTime,
+  endTime,
+  longitude,
+  latitude,
+) {
+  const timeDiff = [1, -1, 2, -2];
 
-    const distRange = 500; // 위도 경도 기준 반경 (m)
-
-    timeblocks = moment.duration(endTime.diff(startTime)).asHours(); // 시간차
-    arr = new Array(timeblocks);
-    for (let i = 0; i < timeblocks; i++) {
-      arr[i] = new Array();
-
-      const schedules = await sequelize.query(
-        'SELECT S.id, S.studyRoomId, S.datetime, R.pricePerHour, C.latitude, C.longitude FROM hassil.StudyRoomSchedule S LEFT JOIN hassil.StudyRoom R ON S.studyRoomId = R.id LEFT JOIN hassil.StudyCafe C ON R.studyCafeId = C.id WHERE S.status = 0 and S.datetime = "' +
-          startTime.add(i, 'hours').format('YYYY-MM-DD HH:mm:ss') +
-          '"',
+  for (let i = 0; i < timeDiff.length; i++) {
+    startTime.add(timeDiff[i], 'hours');
+    endTime.add(timeDiff[i], 'hours');
+    if (option == 0) {
+      await getMinimalCostPath(radius, startTime, endTime, longitude, latitude);
+      alternativePath = minCostPath;
+    } else if (option == 1) {
+      await getMinimalMovingPath(
+        radius,
+        startTime,
+        endTime,
+        longitude,
+        latitude,
       );
-      startTime.subtract(i, 'hours');
+      alternativePath = minMovingPath;
+    }
+    startTime.subtract(timeDiff[i], 'hours');
+    endTime.subtract(timeDiff[i], 'hours');
+    if (alternativePath && alternativePath.length == timeblocks) {
+      return true;
+    }
+  }
 
-      for (let j = 0; j < schedules[0].length; j++) {
-        // 반경 distRange 이내
-        if (
-          utils.getDistance(
-            latitude,
-            longitude,
-            schedules[0][j].latitude,
-            schedules[0][j].longitude,
-          ) <= distRange
-        ) {
-          arr[i].push(schedules[0][j]);
-        }
-      } // end of for j
-    } // end of for i
+  return false;
+} // end of secondPathExists()
 
-    getMinimalMoving();
+async function thirdPathExists(
+  option,
+  radius,
+  startTime,
+  endTime,
+  longitude,
+  latitude,
+) {
+  const timeDiff = [1, -1, 2, -2];
 
-    res.status(200).json(minPath);
+  for (let i = 0; i < timeDiff.length; i++) {
+    startTime.add(timeDiff[i], 'hours');
+    endTime.add(timeDiff[i], 'hours');
+    if (option == 0) {
+      await getMinimalCostPath(
+        maxRadius,
+        startTime,
+        endTime,
+        longitude,
+        latitude,
+      );
+      alternativePath = minCostPath;
+    } else if (option == 1) {
+      await getMinimalMovingPath(
+        maxRadius,
+        startTime,
+        endTime,
+        longitude,
+        latitude,
+      );
+      alternativePath = minMovingPath;
+    }
+    startTime.subtract(timeDiff[i], 'hours');
+    endTime.subtract(timeDiff[i], 'hours');
+    if (alternativePath && alternativePath.length == timeblocks) {
+      return true;
+    }
+  }
+
+  return false;
+} // end of thirdPathExists()
+
+async function getAlternativePaths(
+  option,
+  radius,
+  startTime,
+  endTime,
+  longitude,
+  latitude,
+) {
+  clearGlobalVariables();
+
+  if (
+    await firstPathExists(
+      option,
+      radius,
+      startTime,
+      endTime,
+      longitude,
+      latitude,
+    )
+  ) {
+    result.push({ number: 1 });
+    result.push(alternativePath);
+  }
+  clearGlobalVariables();
+  if (
+    await secondPathExists(
+      option,
+      radius,
+      startTime,
+      endTime,
+      longitude,
+      latitude,
+    )
+  ) {
+    result.push({ number: 2 });
+    result.push(alternativePath);
+  }
+  clearGlobalVariables();
+  if (
+    await thirdPathExists(
+      option,
+      radius,
+      startTime,
+      endTime,
+      longitude,
+      latitude,
+    )
+  ) {
+    result.push({ number: 3 });
+    result.push(alternativePath);
+  }
+} // end of getAlternativePaths()
+
+async function getResult(
+  option,
+  radius,
+  startTime,
+  endTime,
+  longitude,
+  latitude,
+) {
+  if (option == 0) {
+    await getMinimalCostPath(radius, startTime, endTime, longitude, latitude);
+    result.push(minCostPath);
+  } else if (option == 1) {
+    await getMinimalMovingPath(radius, startTime, endTime, longitude, latitude);
+    result.push(minMovingPath);
+  }
+
+  if (result[0] && result[0].length == timeblocks) {
+    result.push({ message: 'path exists' });
+  } else {
+    clearResult();
+    await getAlternativePaths(
+      option,
+      radius,
+      startTime,
+      endTime,
+      longitude,
+      latitude,
+    );
+    if (result.length == 0) {
+      result.push({ message: 'cannot find anything' });
+    } else {
+      result.push({ message: 'how about these' });
+    }
+  }
+} // end of getResult()
+
+// 스터디룸 환승 경로 추천 API
+// http://localhost:8080/api/scheduleRecommend/
+router.route('/').post(async (req, res) => {
+  try {
+    clearGlobalVariables();
+    clearResult();
+
+    await getResult(
+      req.body.option, // 0: 최소요금, 1: 최소이동
+      req.body.radius,
+      moment(req.body.startTime),
+      moment(req.body.endTime),
+      req.body.longitude,
+      req.body.latitude,
+    );
+
+    result.push({ latitude: req.body.latitude });
+    result.push({ longitude: req.body.longitude });
+    result.push({ radius: req.body.radius });
+
+    res.status(200).json(result);
   } catch (err) {
     console.error(err);
     res.status(400).json({ message: 'error' });

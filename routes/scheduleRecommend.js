@@ -341,7 +341,7 @@ async function getResult(
 } // end of getResult()
 
 // 스터디룸 환승 경로 추천 API
-// http://localhost:8080/api/scheduleRecommend/
+// http://localhost:8080/api/schedule-recommend/
 router.route('/').post(async (req, res) => {
   try {
     let answer;

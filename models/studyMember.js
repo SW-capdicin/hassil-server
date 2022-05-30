@@ -73,5 +73,8 @@ module.exports = class StudyMember extends Sequelize.Model {
       foreignKey: 'studyId',
       onDelete: 'CASCADE',
     });
+    db.StudyMember.hasMany(db.AttendHistory, {
+      foreignKey: 'studyMemberId',
+    });
   }
 };

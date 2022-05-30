@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize');
 
-module.exports = class Reservation extends Sequelize.Model {
+module.exports = class AttendHistory extends Sequelize.Model {
   static init(sequelize) {
     return super.init(
       {
@@ -11,37 +11,25 @@ module.exports = class Reservation extends Sequelize.Model {
           allowNull: false,
           unique: true,
         },
-        studyId: {
+        reservationId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: 'Study',
+            model: 'Reservation',
             key: 'id',
           },
           onDelete: 'CASCADE',
         },
-        reservatingUserId: {
+        studyMemberId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: 'User',
+            model: 'StudyMember',
             key: 'id',
           },
           onDelete: 'CASCADE',
         },
         status: {
           type: Sequelize.INTEGER.UNSIGNED,
-          defaultValue: 0,
-        },
-        personCnt: {
-          type: Sequelize.INTEGER.UNSIGNED,
-          defaultValue: 0,
-        },
-        attendCnt: {
-          type: Sequelize.INTEGER.UNSIGNED,
-          defaultValue: 0,
-        },
-        lateCnt: {
-          type: Sequelize.INTEGER.UNSIGNED,
-          defaultValue: 0,
+          allowNull: false,
         },
         createdAt: {
           type: Sequelize.DATE,
@@ -56,8 +44,8 @@ module.exports = class Reservation extends Sequelize.Model {
       },
       {
         sequelize,
-        modelName: 'Reservation',
-        tableName: 'Reservation',
+        modelName: 'AttendHistory',
+        tableName: 'AttendHistory',
         charset: 'utf8',
         collate: 'utf8_general_ci',
         initialAutoIncrement: 1,
@@ -69,18 +57,13 @@ module.exports = class Reservation extends Sequelize.Model {
   }
 
   static associate(db) {
-    db.Reservation.hasMany(db.StudyRoomSchedule, {
+    db.AttendHistory.belongsTo(db.Reservation, {
       foreignKey: 'reservationId',
-    });
-    db.Reservation.belongsTo(db.Study, {
-      foreignKey: 'studyId',
       onDelete: 'CASCADE',
     });
-    db.Reservation.hasOne(db.Meeting, {
-      foreignKey: 'reservationId',
-    });
-    db.Reservation.hasMany(db.AttendHistory, {
-      foreignKey: 'reservationId',
+    db.AttendHistory.belongsTo(db.StudyMember, {
+      foreignKey: 'studyMemberId',
+      onDelete: 'CASCADE',
     });
   }
 };

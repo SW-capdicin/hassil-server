@@ -8,7 +8,7 @@ const cors = require('cors');
 const googleStrategyConfig = require('./config/googleStrategy');
 const sessionConfig = require('./config/sessionConfig');
 const { sequelize, User } = require('./models');
-const { generateDummy } = require('./models/dummy');
+const { generateDummy, generateDummyForDemo } = require('./models/dummy');
 
 const app = express();
 app.set('port', process.env.PORT);
@@ -26,6 +26,7 @@ sequelize
 
     if (force) {
       generateDummy();
+      generateDummyForDemo();
     }
   })
   .catch((err) => {

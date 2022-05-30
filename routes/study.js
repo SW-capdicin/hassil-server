@@ -589,4 +589,130 @@ router
     }
   });
 
+async function getAliveMembers(studyId) {
+  const members = await StudyMember.findAll({
+    where: {
+      studyId,
+      isAlive: 1,
+    },
+    include: [
+      { model: User, required: true, attributes: ['point', 'nickname'] },
+    ],
+  });
+  return members;
+}
+
+async function getNoPointMemberNames(pricePerPerson, members) {
+  let nicknames = [];
+  for (let i = 0; i < members.length; i++) {
+    if (members[i].User.point < pricePerPerson) {
+      nicknames.push(members[i].User.nickname);
+    }
+  }
+  return nicknames;
+}
+
+async function doReservation(
+  userId,
+  studyId,
+  studyRoomScheduleIds,
+  pricePerPerson,
+  members,
+) {
+  const t = await sequelize.transaction();
+  try {
+    for (let i = 0; i < members.length; i++) {
+      await User.increment(
+        { point: -pricePerPerson },
+        { where: { id: members[i].userId }, transaction: t },
+      );
+    }
+
+    const reservation = await Reservation.create(
+      {
+        studyId,
+        reservatingUserId: userId,
+        status: 0,
+        personCnt: members.length,
+      },
+      { transaction: t },
+    );
+
+    await Study.increment(
+      { meetingCnt: 1 },
+      { where: { id: studyId }, transaction: t },
+    );
+
+    for (let i = 0; i < studyRoomScheduleIds.length; i++) {
+      await StudyRoomSchedule.update(
+        {
+          reservationId: reservation.id,
+          status: 1,
+        },
+        {
+          where: {
+            id: studyRoomScheduleIds[i],
+          },
+          transaction: t,
+        },
+      );
+
+      const studyRoomSchedule = await StudyRoomSchedule.findOne({
+        where: {
+          id: studyRoomScheduleIds[i],
+        },
+      });
+      const user = await User.findOne({
+        where: { id: userId },
+      });
+      const studyRoom = await StudyRoom.findOne({
+        where: { id: studyRoomSchedule.studyRoomId },
+      });
+      const studyCafe = await StudyCafe.findOne({
+        where: { id: studyRoom.studyCafeId },
+      });
+      await createMailRequest(
+        '예약확인 메일입니다.',
+        '${userName}님! 안녕하세요? HASSIL을 이용해 주셔서 진심으로 감사드립니다.<br/> 스터디룸 예약이 정상적으로 이루어졌습니다. 아래 예약내역을 확인해주세요.<br/><br/>' +
+          `예약자: ${user.name}, 스터디카페: ${studyCafe.name}, 스터디룸: ${studyRoom.name}, 이용일시: ${studyRoomSchedule.datetime}, 예약번호: ${studyRoomSchedule.reservationId}`,
+        user,
+      );
+    }
+
+    await t.commit();
+  } catch (err) {
+    console.error(err);
+    await t.rollback();
+  }
+}
+
+// 추천받은 스터디 장소 예약 API
+router.route('/:id/schedule-recommend/reservations').post(async (req, res) => {
+  if (!req.user) return res.status(401).json({ message: 'no user in session' });
+  try {
+    const userId = req.user.id;
+    const studyId = req.params.id;
+    const studyRoomScheduleIds = req.body.studyRoomScheduleIds;
+    const pricePerPerson = req.body.pricePerPerson;
+    const members = await getAliveMembers(studyId);
+    const nicknames = await getNoPointMemberNames(pricePerPerson, members);
+
+    if (nicknames.length > 0) {
+      res.status(402).json(nicknames);
+    } else {
+      await doReservation(
+        userId,
+        studyId,
+        studyRoomScheduleIds,
+        pricePerPerson,
+        members,
+      );
+      res.status(200).json({ message: 'success' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(400).json(err);
+  }
+});
+
 module.exports = router;

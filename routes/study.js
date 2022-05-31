@@ -651,15 +651,14 @@ async function doReservation(
         },
         {
           where: {
-            id: studyRoomScheduleIds[i],
+            id: studyRoomScheduleIds[i].id,
           },
           transaction: t,
         },
       );
-
       const studyRoomSchedule = await StudyRoomSchedule.findOne({
         where: {
-          id: studyRoomScheduleIds[i],
+          id: studyRoomScheduleIds[i].id,
         },
       });
       const user = await User.findOne({

@@ -39,24 +39,12 @@ const getScheduleRecommend = (option) => {
         option,
       }
     }, {
-      status: () => ({
-        json: (a) => {
-          res(a)
-        }
-      })
+      status: () => ({ json: res })
     })
   })
 }
 
-const parser = (str) => str.split(' ').map(a => Number(a));
-
-router.route('/test').get(async (req, res) => {
-  const correct = [1000, 1250, 1000, 1000, 1000, 1000];
-  const result = await getScheduleRecommend(0);
-  console.log('result', getPricePerHour(result.number3))
-  console.log('correct', correct)
-  res.send(checkIsSame(result.number3, correct));
-})
+const parser = (str) => str.split(' ').map(Number);
 
 const testSuccessCase = (testCase, correctCost, correctPath) => {
   return async (req, res) => {
@@ -76,7 +64,7 @@ const testSuccessCase = (testCase, correctCost, correctPath) => {
   
       res.send({
         cost: checkIsSame(resultCost, correctCost),
-        path: checkIsSame(resultPath, correctCost)
+        path: checkIsSame(resultPath, correctPath)
       });
     } catch (err) {
       console.error(err);

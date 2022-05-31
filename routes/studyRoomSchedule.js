@@ -39,7 +39,6 @@ router.route('/:id/').patch(async (req, res) => {
 
     const studyRoomSchedule = await StudyRoomSchedule.findOne({
       where: { id: req.params.id },
-      transaction: t,
     });
 
     const result = await Reservation.update(

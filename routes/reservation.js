@@ -55,11 +55,9 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
         where: { reservationId: reservationId },
         order: [['time', 'ASC']],
         limit: 1,
-        transaction: t,
       });
       const studyRoom = await StudyRoom.findOne({
         where: { id: studyRoomSchedule[0].studyRoomId },
-        transaction: t,
       });
       const studyCafe = await StudyCafe.findOne({
         where: { id: studyRoom.studyCafeId },
@@ -72,7 +70,6 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
     } else {
       const meeting = await Meeting.findOne({
         where: { reservationId: reservationId },
-        transaction: t,
       });
       targetLatitude = meeting.latitude;
       targetLongitude = meeting.longitude;
@@ -129,7 +126,6 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
     const studyMembers = await StudyMember.findAll({
       where: { studyId: study.id },
       raw: true,
-      transaction: t,
     });
 
     // member의 남은 보증금 계산 -- 0보다 아래면 퇴출

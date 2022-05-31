@@ -40,7 +40,6 @@ router
       // 검증 logic 필요
       const user = await User.findOne({
         where: { id: userId },
-        transaction: t,
       });
 
       const newAmount = user.point - req.body.depositPerPerson;
@@ -278,11 +277,9 @@ router
     try {
       const user = await User.findOne({
         where: { id: userId },
-        transaction: t,
       });
       const study = await Study.findOne({
         where: { id: req.params.id },
-        transaction: t,
       });
       const newAmount = user.point - study.depositPerPerson;
 
@@ -353,12 +350,10 @@ router.route('/:id/member/drop').patch(async (req, res) => {
 
     const study = await Study.findOne({
       where: { id: studyId },
-      transaction: t,
     });
 
     const studyMembers = await StudyMember.findAll({
       where: { studyId: studyId },
-      transaction: t,
     });
 
     const result = await StudyMember.update(
@@ -393,7 +388,6 @@ router.route('/:id/member/point').patch(async (req, res) => {
   try {
     const user = await User.findOne({
       where: { id: userId },
-      transaction: t,
     });
 
     const aliveCnt = await StudyMember.count({
@@ -401,14 +395,12 @@ router.route('/:id/member/point').patch(async (req, res) => {
         studyId: studyId,
         isAlive: [1, 2],
       },
-      transaction: t,
     });
 
     const study = await Study.findOne({
       where: {
         id: studyId,
       },
-      transaction: t,
     });
 
     const refund = Math.floor(study.rewardSum / aliveCnt);

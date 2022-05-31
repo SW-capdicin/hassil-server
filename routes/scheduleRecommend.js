@@ -7,21 +7,28 @@ const router = express.Router();
 // global variables
 let timeblocks;
 let possibleSchedules;
-let minCostPath;
-let minMovingPath;
-let alternativePath = [];
+let minCostPath = [];
+let minMovingPath = [];
+let number1Path = [];
+let number2Path = [];
+let number3Path = [];
 let result = [];
 let minMovingCnt = 1000000;
 let minPriceSum = 1000000;
 let message = '';
 const maxRadius = 1000; // 단위 (m)
 
+function clearAlternativePaths() {
+  number1Path = [];
+  number2Path = [];
+  number3Path = [];
+}
+
 function clearGlobalVariables() {
   timeblocks = null;
   possibleSchedules = null;
-  minCostPath = null;
-  minMovingPath = null;
-  alternativePath = [];
+  minCostPath = [];
+  minMovingPath = [];
   minMovingCnt = 1000000;
   minPriceSum = 1000000;
   message = '';
@@ -143,7 +150,7 @@ async function getMinimalCostPath(
   } // end of for i
 } // end of getMinimalCostPath()
 
-async function firstPathExists(
+async function getNumber1Path(
   option,
   radius,
   startTime,
@@ -159,7 +166,9 @@ async function firstPathExists(
       longitude,
       latitude,
     );
-    alternativePath = minCostPath;
+    if (minCostPath.length == timeblocks) {
+      number1Path = minCostPath;
+    }
   } else if (option == 1) {
     await getMinimalMovingPath(
       maxRadius,
@@ -168,15 +177,13 @@ async function firstPathExists(
       longitude,
       latitude,
     );
-    alternativePath = minMovingPath;
+    if (minMovingPath.length == timeblocks) {
+      number1Path = minMovingPath;
+    }
   }
-  if (alternativePath && alternativePath.length == timeblocks) {
-    return true;
-  }
-  return false;
-} // end of firstPathExists()
+} // end of getNumber1Path()
 
-async function secondPathExists(
+async function getNumber2Path(
   option,
   radius,
   startTime,
@@ -191,7 +198,10 @@ async function secondPathExists(
     endTime.add(timeDiff[i], 'hours');
     if (option == 0) {
       await getMinimalCostPath(radius, startTime, endTime, longitude, latitude);
-      alternativePath = minCostPath;
+      if (minCostPath.length == timeblocks) {
+        number2Path = minCostPath;
+        break;
+      }
     } else if (option == 1) {
       await getMinimalMovingPath(
         radius,
@@ -200,19 +210,17 @@ async function secondPathExists(
         longitude,
         latitude,
       );
-      alternativePath = minMovingPath;
+      if (minMovingPath.length == timeblocks) {
+        number2Path = minMovingPath;
+        break;
+      }
     }
     startTime.subtract(timeDiff[i], 'hours');
     endTime.subtract(timeDiff[i], 'hours');
-    if (alternativePath && alternativePath.length == timeblocks) {
-      return true;
-    }
   }
+} // end of getNumber2Path()
 
-  return false;
-} // end of secondPathExists()
-
-async function thirdPathExists(
+async function getNumber3Path(
   option,
   radius,
   startTime,
@@ -233,7 +241,10 @@ async function thirdPathExists(
         longitude,
         latitude,
       );
-      alternativePath = minCostPath;
+      if (minCostPath.length == timeblocks) {
+        number3Path = minCostPath;
+        break;
+      }
     } else if (option == 1) {
       await getMinimalMovingPath(
         maxRadius,
@@ -242,17 +253,15 @@ async function thirdPathExists(
         longitude,
         latitude,
       );
-      alternativePath = minMovingPath;
+      if (minMovingPath.length == timeblocks) {
+        number3Path = minMovingPath;
+        break;
+      }
     }
     startTime.subtract(timeDiff[i], 'hours');
     endTime.subtract(timeDiff[i], 'hours');
-    if (alternativePath && alternativePath.length == timeblocks) {
-      return true;
-    }
   }
-
-  return false;
-} // end of thirdPathExists()
+} // end of getNumber3Path()
 
 async function getAlternativePaths(
   option,
@@ -263,45 +272,11 @@ async function getAlternativePaths(
   latitude,
 ) {
   clearGlobalVariables();
-
-  if (
-    await firstPathExists(
-      option,
-      radius,
-      startTime,
-      endTime,
-      longitude,
-      latitude,
-    )
-  ) {
-    result.push({ number1: alternativePath });
-  }
+  await getNumber1Path(option, radius, startTime, endTime, longitude, latitude);
   clearGlobalVariables();
-  if (
-    await secondPathExists(
-      option,
-      radius,
-      startTime,
-      endTime,
-      longitude,
-      latitude,
-    )
-  ) {
-    result.push({ number2: alternativePath });
-  }
+  await getNumber2Path(option, radius, startTime, endTime, longitude, latitude);
   clearGlobalVariables();
-  if (
-    await thirdPathExists(
-      option,
-      radius,
-      startTime,
-      endTime,
-      longitude,
-      latitude,
-    )
-  ) {
-    result.push({ number3: alternativePath });
-  }
+  await getNumber3Path(option, radius, startTime, endTime, longitude, latitude);
 } // end of getAlternativePaths()
 
 async function getResult(
@@ -323,7 +298,6 @@ async function getResult(
   if (result && result.length == timeblocks) {
     message = 'path exists';
   } else {
-    clearResult();
     await getAlternativePaths(
       option,
       radius,
@@ -332,10 +306,14 @@ async function getResult(
       longitude,
       latitude,
     );
-    if (result.length == 0) {
-      message = 'cannot find anything';
-    } else {
+    if (
+      (number1Path && number1Path.length == timeblocks) ||
+      (number2Path && number2Path.length == timeblocks) ||
+      (number3Path && number3Path.length == timeblocks)
+    ) {
       message = 'how about these';
+    } else {
+      message = 'cannot find anything';
     }
   }
 } // end of getResult()
@@ -346,6 +324,7 @@ router.route('/').post(async (req, res) => {
   try {
     let answer;
     clearGlobalVariables();
+    clearAlternativePaths();
     clearResult();
 
     await getResult(
@@ -362,8 +341,15 @@ router.route('/').post(async (req, res) => {
       longitude: req.body.longitude,
       radius: req.body.radius,
       message: message,
-      schedule: result,
     };
+
+    if (message == 'how about these') {
+      answer.number1 = number1Path;
+      answer.number2 = number2Path;
+      answer.number3 = number3Path;
+    } else if (message == 'path exists') {
+      answer.schedule = result;
+    }
 
     res.status(200).json(answer);
   } catch (err) {

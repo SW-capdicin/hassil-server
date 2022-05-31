@@ -46,10 +46,7 @@ function dfs(path, nextTime, priceSum, moveSum) {
     ) {
       minMovingCnt = moveSum;
       minPriceSum = priceSum;
-      minMovingPath = new Array();
-      for (let j = 0; j < path.length; j++) {
-        minMovingPath.push(path[j]); // deep copy
-      }
+      minMovingPath = [...path]; // deep copy
     }
     return;
   }
@@ -61,8 +58,8 @@ function dfs(path, nextTime, priceSum, moveSum) {
 
   for (let i = 0; i < possibleSchedules[nextTime].length; i++) {
     const m =
-      possibleSchedules[nextTime][i].studyRoomId ==
-      path[path.length - 1].studyRoomId
+      possibleSchedules[nextTime][i].studyCafeId ==
+      path[path.length - 1].studyCafeId
         ? 0
         : 1;
     path.push(possibleSchedules[nextTime][i]);
@@ -86,25 +83,25 @@ async function getMinimalMovingPath(
   timeblocks = moment.duration(endTime.diff(startTime)).asHours(); // 시간차
   possibleSchedules = new Array(timeblocks);
   for (let i = 0; i < timeblocks; i++) {
-    possibleSchedules[i] = new Array();
+    possibleSchedules[i] = [];
 
-    const schedules = await sequelize.query(
+    const [ schedules ] = await sequelize.query(
       'SELECT S.id, S.studyRoomId, S.datetime, R.pricePerHour, C.id AS "studyCafeId", C.name AS "studyCafeName", R.name AS "studyRoomName", C.latitude, C.longitude FROM hassil.StudyRoomSchedule S LEFT JOIN hassil.StudyRoom R ON S.studyRoomId = R.id LEFT JOIN hassil.StudyCafe C ON R.studyCafeId = C.id WHERE S.status = 0 and S.datetime = "' +
         startTime.add(i, 'hours').format('YYYY-MM-DD HH:mm:ss') +
         '"',
     );
     startTime.subtract(i, 'hours');
 
-    for (let j = 0; j < schedules[0].length; j++) {
+    for (let j = 0; j < schedules.length; j++) {
       if (
         utils.getDistance(
           latitude,
           longitude,
-          schedules[0][j].latitude,
-          schedules[0][j].longitude,
+          schedules[j].latitude,
+          schedules[j].longitude,
         ) <= radius
       ) {
-        possibleSchedules[i].push(schedules[0][j]);
+        possibleSchedules[i].push(schedules[j]);
       }
     } // end of for j
   } // end of for i
@@ -115,6 +112,7 @@ async function getMinimalMovingPath(
     dfs(path, 1, possibleSchedules[0][i].pricePerHour, 0);
     path.pop();
   }
+  return [...minMovingPath];
 } // end of getMinimalMovingPath()
 
 async function getMinimalCostPath(
@@ -148,6 +146,7 @@ async function getMinimalCostPath(
       }
     } // end of for j
   } // end of for i
+  return [...minCostPath];
 } // end of getMinimalCostPath()
 
 async function getNumber1Path(
@@ -159,7 +158,7 @@ async function getNumber1Path(
   latitude,
 ) {
   if (option == 0) {
-    await getMinimalCostPath(
+    const minCostPath = await getMinimalCostPath(
       maxRadius,
       startTime,
       endTime,
@@ -200,7 +199,7 @@ async function getNumber2Path(
       await getMinimalCostPath(radius, startTime, endTime, longitude, latitude);
       if (minCostPath.length == timeblocks) {
         number2Path = minCostPath;
-        break;
+        // break; // 왜 이걸 주석 처리하면 잘 될까??
       }
     } else if (option == 1) {
       await getMinimalMovingPath(
@@ -212,13 +211,25 @@ async function getNumber2Path(
       );
       if (minMovingPath.length == timeblocks) {
         number2Path = minMovingPath;
-        break;
+        // break; // 왜 이걸 주석 처리하면 잘 될까??
       }
     }
     startTime.subtract(timeDiff[i], 'hours');
     endTime.subtract(timeDiff[i], 'hours');
   }
 } // end of getNumber2Path()
+
+const getCost = (list) => list.reduce((acc, cur) => (acc + cur.pricePerHour), 0);
+
+const getMovingCount = (list) => {
+  const mapR = {};
+  const mapC = {};
+  list.map(({ studyRoomId, studyCafeId }) => {
+    mapR[studyRoomId] = true
+    mapC[studyCafeId] = true
+  });
+  return Object.keys(mapC).length;
+}
 
 async function getNumber3Path(
   option,
@@ -229,12 +240,13 @@ async function getNumber3Path(
   latitude,
 ) {
   const timeDiff = [1, -1, 2, -2];
-
+  clearGlobalVariables();
+  let best = null;
   for (let i = 0; i < timeDiff.length; i++) {
     startTime.add(timeDiff[i], 'hours');
     endTime.add(timeDiff[i], 'hours');
     if (option == 0) {
-      await getMinimalCostPath(
+      const minCostPath = await getMinimalCostPath(
         maxRadius,
         startTime,
         endTime,
@@ -243,10 +255,13 @@ async function getNumber3Path(
       );
       if (minCostPath.length == timeblocks) {
         number3Path = minCostPath;
-        break;
+        if (!best) { best = minCostPath }
+        else {
+          getCost(best) > getCost(minCostPath) && (best = minCostPath)
+        }
       }
     } else if (option == 1) {
-      await getMinimalMovingPath(
+      const minMovingPath = await getMinimalMovingPath(
         maxRadius,
         startTime,
         endTime,
@@ -255,12 +270,18 @@ async function getNumber3Path(
       );
       if (minMovingPath.length == timeblocks) {
         number3Path = minMovingPath;
-        break;
+        if (!best) { best = minMovingPath }
+        else {
+          getMovingCount(best) > getMovingCount(minMovingPath) && (best = minMovingPath)
+        }
       }
     }
     startTime.subtract(timeDiff[i], 'hours');
     endTime.subtract(timeDiff[i], 'hours');
   }
+  console.log('best', best);
+  number3Path = best;
+  return best;
 } // end of getNumber3Path()
 
 async function getAlternativePaths(

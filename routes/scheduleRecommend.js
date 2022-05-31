@@ -339,9 +339,7 @@ async function getResult(
   }
 } // end of getResult()
 
-// 스터디룸 환승 경로 추천 API
-// http://localhost:8080/api/schedule-recommend/
-router.route('/').post(async (req, res) => {
+const scheduleRecommend = async (req, res) => {
   try {
     let answer;
     clearGlobalVariables();
@@ -377,6 +375,13 @@ router.route('/').post(async (req, res) => {
     console.error(err);
     res.status(400).json({ message: 'error' });
   }
-});
+}
 
-module.exports = router;
+// 스터디룸 환승 경로 추천 API
+// http://localhost:8080/api/schedule-recommend/
+router.route('/').post(scheduleRecommend);
+
+module.exports = {
+  router,
+  scheduleRecommend
+};

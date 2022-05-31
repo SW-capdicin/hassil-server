@@ -127,14 +127,14 @@ async function generateDummyForDemo() {
       content: '테스트 history',
     },
   ]);
-  await Category.bulkCreate([
-    { name: '코딩' },
-    { name: '영어' },
-    { name: '중국어' },
-    { name: '수학' },
-    { name: 'NCS' },
-    { name: '기상' },
-  ]);
+  // await Category.bulkCreate([
+  //   { name: '코딩' },
+  //   { name: '영어' },
+  //   { name: '중국어' },
+  //   { name: '수학' },
+  //   { name: 'NCS' },
+  //   { name: '기상' },
+  // ]);
   await Study.bulkCreate([
     {
       categoryId: 1,
@@ -204,6 +204,7 @@ async function generateDummyForDemo() {
       longitude: 37.27511348605205,
       address:
         '경기 수원시 팔달구 중부대로 251 3층, 아주대 삼거리 올리브영 옆 건물 3층',
+      region2DepthName: '수원시 팔달구',
       shopNumber: '050714395682',
       name: '르하임스터디카페 수원아주대점',
       info: '공부맛집, 합격명당 고객만족도 1위 스터디카페. 24시간, 365일 운영되는 프리미엄 스터디카페입니다.',
@@ -215,6 +216,7 @@ async function generateDummyForDemo() {
       latitude: 127.04227188088157,
       longitude: 37.276952065489276,
       address: '경기 수원시 팔달구 중부대로239번길 35 2층',
+      region2DepthName: '수원시 팔달구',
       shopNumber: '050714395682',
       name: '안다미로스터디카페 아주대점',
       info: '지식이 차고 넘치는 공간 안다미로 스터디카페를 찾아주신 고객 여러분께 감사 말슴드립니다.',

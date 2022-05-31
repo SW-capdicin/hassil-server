@@ -10,6 +10,7 @@ const {
   StudyRoomSchedule,
   StudyRoom,
   StudyCafe,
+  AttendHistory,
 } = require('../models');
 const router = express.Router();
 
@@ -38,12 +39,14 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
 
     const reservation = await Reservation.findOne({
       where: { id: reservationId },
-      transaction: t,
     });
 
     const study = await Study.findOne({
       where: { id: reservation.studyId },
-      transaction: t,
+    });
+
+    const studyMember = await StudyMember.findOne({
+      where: { userId: userId, studyId: reservation.studyId },
     });
 
     // 예약 이용 모임 장소, 시간 구하기
@@ -101,6 +104,17 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
       // 위치 불일치
     } else {
       result = 'fail';
+    }
+
+    if (result != 'fail') {
+      await AttendHistory.create(
+        {
+          reservationId: reservationId,
+          studyMemberId: studyMember.id,
+          status: isLate, // 0: 출석,  1 : 지각
+        },
+        { transaction: t },
+      );
     }
 
     await StudyMember.increment(

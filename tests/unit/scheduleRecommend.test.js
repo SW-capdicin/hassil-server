@@ -21,57 +21,82 @@ const {
 
 const { scheduleRecommend } = require('../../routes/scheduleRecommend');
 
-const checkIsSame = (list, correct, key = 'pricePerHour') => !list.filter((cur, i) => cur[key] != correct[i]).length;
+const checkIsSame = (list, correct, key = 'pricePerHour') =>
+  !list.filter((cur, i) => cur[key] != correct[i]).length;
 
 const getPricePerHour = (list) => list.map(({ pricePerHour }) => pricePerHour);
 
 const getScheduleRecommend = (option) => {
   return new Promise((res, rej) => {
-    scheduleRecommend({
-      body: {
-        reservatingUserId: 5,
-        latitude: 100,
-        longitude: 100,
-        startTime: '2022-05-22T00:00:00+09',
-        endTime: '2022-05-22T06:00:00+09',
-        radius: 500,
-        address: '',
-        option,
-      }
-    }, {
-      status: () => ({ json: res })
-    })
-  })
-}
+    scheduleRecommend(
+      {
+        body: {
+          reservatingUserId: 5,
+          latitude: 100,
+          longitude: 100,
+          startTime: '2022-05-22T00:00:00+09',
+          endTime: '2022-05-22T06:00:00+09',
+          radius: 500,
+          address: '',
+          option,
+        },
+      },
+      {
+        status: () => ({ json: res }),
+      },
+    );
+  });
+};
 
 const parser = (str) => str.split(' ').map(Number);
 
-const testSuccessCase = (testCase, correctCost, correctPath) => {
+const testSuccessCase = (testCase, correctCost, correctPath, bit) => {
   return async (req, res) => {
     try {
       await clearSchedulesGTEid1000();
       await testCase();
+      // xxx|000 == 000 : path exists
+      if (!(bit | '000')) {
+        const { schedule: resultCost } = await getScheduleRecommend(0);
+        const { schedule: resultPath } = await getScheduleRecommend(1);
+      }
 
-      const { schedule: resultCost } = await getScheduleRecommend(0);
-      const { schedule: resultPath } = await getScheduleRecommend(1);
-      console.log('---------------------------------------')
-      console.log('result', getPricePerHour(resultCost))
-      console.log('correct', correctCost)
-      console.log('---------------------------------------')
-      console.log('result', getPricePerHour(resultPath))
-      console.log('correct', correctPath)
-      console.log('---------------------------------------')
-  
+      // xxx&001 == 001 : number 1
+      if (bit & '001') {
+        const { number1: resultCost } = await getScheduleRecommend(0);
+        const { number1: resultPath } = await getScheduleRecommend(1);
+      }
+
+      // xxx&010 == 010 : number 2
+      if (bit & '010') {
+        const { number2: resultCost } = await getScheduleRecommend(0);
+        const { number2: resultPath } = await getScheduleRecommend(1);
+      }
+
+      // xxx&100 == 100 : number 3
+      if (bit & '100') {
+        const { number3: resultCost } = await getScheduleRecommend(0);
+        const { number3: resultPath } = await getScheduleRecommend(1);
+      }
+
+      console.log('---------------------------------------');
+      console.log('result', getPricePerHour(resultCost));
+      console.log('correct', correctCost);
+      console.log('---------------------------------------');
+      console.log('result', getPricePerHour(resultPath));
+      console.log('correct', correctPath);
+      console.log('---------------------------------------');
+
       res.send({
-        cost: checkIsSame(resultCost, correctCost),
-        path: checkIsSame(resultPath, correctPath)
+        minimalCost: checkIsSame(resultCost, correctCost),
+        minimalMoving: checkIsSame(resultPath, correctPath),
       });
     } catch (err) {
       console.error(err);
       res.status(400).json({ message: 'error' });
     }
-  }
-}
+  };
+};
 
 // test dataset API - generate parent dummy data
 router.route('/parentDummy').get(async (req, res) => {
@@ -87,64 +112,64 @@ router.route('/parentDummy').get(async (req, res) => {
 });
 
 // test case 1
-router.route('/testcase1').get(testSuccessCase(
-  studyRoomScheduleTestCase1,
-  [1000, 1000, 1000, 1000, 1000, 1000],
-  [1000, 1000, 1000, 1000, 1000, 1000],
-));
+router
+  .route('/testcase1')
+  .get(
+    testSuccessCase(
+      studyRoomScheduleTestCase1,
+      [1000, 1000, 1000, 1000, 1000, 1000],
+      [1000, 1000, 1000, 1000, 1000, 1000],
+      '000',
+    ),
+  );
 
 // test case 2
-router.route('/testcase2').get(testSuccessCase(
-  studyRoomScheduleTestCase2,
-  [1000, 3000, 1000, 1250, 1000, 1000],
-  [3000, 3000, 3000, 3000, 3000, 3000],
-));
+router
+  .route('/testcase2')
+  .get(
+    testSuccessCase(
+      studyRoomScheduleTestCase2,
+      [1000, 3000, 1000, 1250, 1000, 1000],
+      [3000, 3000, 3000, 3000, 3000, 3000],
+      '000',
+    ),
+  );
 
 // test case 3
-router.route('/testcase3').get(testSuccessCase(
-  studyRoomScheduleTestCase3,
-  parser('1000 1250 1000 1000 1250 1000'),
-  parser('3000 3000 3000 1250 1250 1000'),
-));
+router
+  .route('/testcase3')
+  .get(
+    testSuccessCase(
+      studyRoomScheduleTestCase3,
+      parser('1000 1250 1000 1000 1250 1000'),
+      parser('1000 1250 1000 1000 1250 1000'),
+      '000',
+    ),
+  );
 
 // test case 4
-router.route('/testcase4').get(async (req, res) => {
-  try {
-    await clearSchedulesGTEid1000();
-    await studyRoomScheduleTestCase4();
-    // [path exists 예제]
-    /* (최소 환승 정답) 1000 1250 1000 1000 1250 1000 = total 6,500 / 환승 수 4회
-     * (최소 요금 정답) 1000 1250 1000 1000 1250 1000 = total 6,500 / 환승 수 4회
-     * 1000 스터디 00    02 03    05
-     * 1250 스터디    01       04
-     * 3000 스터디    01 02       05
-     */
-
-    res.status(200).json({ message: '결과' });
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: 'error' });
-  }
-});
+router
+  .route('/testcase4')
+  .get(
+    testSuccessCase(
+      studyRoomScheduleTestCase4,
+      parser('1000 1250 1000 1000 1250 1000'),
+      parser('1000 1250 1000 1000 1250 1000'),
+      '000',
+    ),
+  );
 // test case 5
-router.route('/testcase5').get(async (req, res) => {
-  try {
-    await clearSchedulesGTEid1000();
-    await studyRoomScheduleTestCase5();
-    // [path exists 예제]
-    /* (최소 환승 정답) 3000 3000 3000 1000 1000 1000 = total 12,000 / 환승 수 2회
-     * (최소 요금 정답) 1000 3000 1250 1000 1000 1000 = total 8,250 / 환승 수 3회
-     * 1000 스터디 00       03 04 05
-     * 1250 스터디 00    02 03 04
-     * 3000 스터디 00 01 02       05
-     */
+router
+  .route('/testcase5')
+  .get(
+    testSuccessCase(
+      studyRoomScheduleTestCase5,
+      parser('1000 3000 1250 1000 1000 1000'),
+      parser('3000 3000 1250 1000 1000 1000'),
+      '000',
+    ),
+  );
 
-    res.status(200).json({ message: '결과' });
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: 'error' });
-  }
-});
 // test case 6
 router.route('/testcase6').get(async (req, res) => {
   try {
@@ -164,67 +189,40 @@ router.route('/testcase6').get(async (req, res) => {
     res.status(400).json({ message: 'error' });
   }
 });
+
 // test case 7
-router.route('/testcase7').get(async (req, res) => {
-  try {
-    await clearSchedulesGTEid1000();
-    await studyRoomScheduleTestCase7();
-    // [how about these - number 1 예제(반경 1000m로 넓히면 path 생기는 상황)]
-    // 위도 경도 (100, 100) 과 (100.007, 100.007) 거리 = 800m
-    /* (최소 환승 정답) 1000 2000 1250 1000 1000 1000 = total 7,250 / 환승 수 3회
-     * (최소 요금 정답) 1000 2000 1250 1000 1000 1000 = total 7,250 / 환승 수 3회
-     * 1000 스터디(100,100)       00       03 04 05
-     * 1250 스터디(100,100)       00    02 03 04
-     * 3000 스터디(100,100)       00    02       05
-     * 2000 스터디(100.07,100.07)    01
-     */
+router
+  .route('/testcase7')
+  .get(
+    testSuccessCase(
+      studyRoomScheduleTestCase7,
+      parser('1000 2000 1250 1000 1000 1000'),
+      parser('1000 2000 1250 1000 1000 1000'),
+      '001',
+    ),
+  );
 
-    res.status(200).json({ message: '결과' });
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: 'error' });
-  }
-});
 // test case 8
-router.route('/testcase8').get(async (req, res) => {
-  try {
-    await clearSchedulesGTEid1000();
-    await studyRoomScheduleTestCase8();
-    // [how about these - number 2 예제(시간대 +1) 옮기면 path 생기는 상황)]
-    // 위도 경도 (100, 100) 과 (100.007, 100.007) 거리 = 800m
-    /* (최소 환승 정답) 3000 3000 1000 1000 1000 1000 = total 10,000 / 환승 수 1회
-     * (최소 요금 정답) 3000 1250 1000 1000 1000 1000 = total 8,250 / 환승 수 2회
-     * 1000 스터디          03 04 05 06
-     * 1250 스터디       02 03 04
-     * 3000 스터디    01 02       05
-     */
-
-    res.status(200).json({ message: '결과' });
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: 'error' });
-  }
-});
+router
+  .route('/testcase8')
+  .get(
+    testSuccessCase(
+      studyRoomScheduleTestCase8,
+      parser('3000 1250 1000 1000 1000 1000'),
+      parser('3000 3000 1000 1000 1000 1000'),
+    ),
+  );
 // test case 9
-router.route('/testcase9').get(async (req, res) => {
-  try {
-    await clearSchedulesGTEid1000();
-    await studyRoomScheduleTestCase9();
-    // [how about these - number 2 예제(시간대 +1, +2) 옮기면 path 생기는 상황)]
-    // 위도 경도 (100, 100) 과 (100.007, 100.007) 거리 = 800m
-    /* (최소 환승 정답) 3000 3000 1000 1000 1000 1250 = total 10,250 / 환승 수 2회
-     * (최소 요금 정답) 3000 1250 1000 1000 1000 1250 = total 8,500 / 환승 수 3회
-     * 1000 스터디          03 04 05    07
-     * 1250 스터디       02 03 04    06
-     * 3000 스터디    01 02       05
-     */
+router
+  .route('/testcase9')
+  .get(
+    testSuccessCase(
+      studyRoomScheduleTestCase9,
+      parser('3000 1250 1000 1000 1000 1250'),
+      parser('3000 3000 1000 1000 1000 1250'),
+    ),
+  );
 
-    res.status(200).json({ message: '결과' });
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: 'error' });
-  }
-});
 // test case 10
 router.route('/testcase10').get(async (req, res) => {
   try {

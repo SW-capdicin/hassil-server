@@ -1,6 +1,7 @@
 const express = require('express');
 const { sequelize } = require('../../models');
 const router = express.Router();
+
 const {
   clearCafesAndRoomsGTEid1000,
   generateDummyReservationDefault,
@@ -18,6 +19,60 @@ const {
   studyRoomScheduleTestCase11,
 } = require('../../models/dummy');
 
+const { scheduleRecommend } = require('../../routes/scheduleRecommend');
+
+const checkIsSame = (list, correct, key = 'pricePerHour') => !list.filter((cur, i) => cur[key] != correct[i]).length;
+
+const getPricePerHour = (list) => list.map(({ pricePerHour }) => pricePerHour);
+
+const getScheduleRecommend = (option) => {
+  return new Promise((res, rej) => {
+    scheduleRecommend({
+      body: {
+        reservatingUserId: 5,
+        latitude: 100,
+        longitude: 100,
+        startTime: '2022-05-22T00:00:00+09',
+        endTime: '2022-05-22T06:00:00+09',
+        radius: 500,
+        address: '',
+        option,
+      }
+    }, {
+      status: () => ({ json: res })
+    })
+  })
+}
+
+const parser = (str) => str.split(' ').map(Number);
+
+const testSuccessCase = (testCase, correctCost, correctPath) => {
+  return async (req, res) => {
+    try {
+      await clearSchedulesGTEid1000();
+      await testCase();
+
+      const { schedule: resultCost } = await getScheduleRecommend(0);
+      const { schedule: resultPath } = await getScheduleRecommend(1);
+      console.log('---------------------------------------')
+      console.log('result', getPricePerHour(resultCost))
+      console.log('correct', correctCost)
+      console.log('---------------------------------------')
+      console.log('result', getPricePerHour(resultPath))
+      console.log('correct', correctPath)
+      console.log('---------------------------------------')
+  
+      res.send({
+        cost: checkIsSame(resultCost, correctCost),
+        path: checkIsSame(resultPath, correctPath)
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(400).json({ message: 'error' });
+    }
+  }
+}
+
 // test dataset API - generate parent dummy data
 router.route('/parentDummy').get(async (req, res) => {
   try {
@@ -32,61 +87,26 @@ router.route('/parentDummy').get(async (req, res) => {
 });
 
 // test case 1
-router.route('/testcase1').get(async (req, res) => {
-  try {
-    await clearSchedulesGTEid1000();
-    await studyRoomScheduleTestCase1();
-    // [path exists 예제]
-    /* (최소 환승 정답) 1000 1000 1000 1000 1000 1000
-     * (최소 요금 정답) 1000 1000 1000 1000 1000 1000
-     */
-
-    res.status(200).json({ message: '결과' });
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: 'error' });
-  }
-});
+router.route('/testcase1').get(testSuccessCase(
+  studyRoomScheduleTestCase1,
+  [1000, 1000, 1000, 1000, 1000, 1000],
+  [1000, 1000, 1000, 1000, 1000, 1000],
+));
 
 // test case 2
-router.route('/testcase2').get(async (req, res) => {
-  try {
-    await clearSchedulesGTEid1000();
-    await studyRoomScheduleTestCase2();
-    // [path exists 예제]
-    /* (최소 환승 정답) 3000 3000 3000 3000 3000 3000
-     * (최소 요금 정답) 1000 3000 1000 1250 1000 1000
-     * 1000 스터디 00    02    04 05
-     * 1250 스터디 00    02 03    05
-     * 3000 스터디 00 01 02 03 04 05
-     * 500  스터디 00 01 02 03 04 05
-     */
+router.route('/testcase2').get(testSuccessCase(
+  studyRoomScheduleTestCase2,
+  [1000, 3000, 1000, 1250, 1000, 1000],
+  [3000, 3000, 3000, 3000, 3000, 3000],
+));
 
-    res.status(200).json({ message: '결과' });
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: 'error' });
-  }
-});
 // test case 3
-router.route('/testcase3').get(async (req, res) => {
-  try {
-    await clearSchedulesGTEid1000();
-    await studyRoomScheduleTestCase3();
-    // [path exists 예제]
-    /* (최소 환승 정답) 3000 3000 3000 1250 1250 1000 = total 12,500 / 환승 수 2회
-     * (최소 요금 정답) 1000 1250 1000 1000 1250 1000 = total 8,250 / 환승 수 4회
-     * 1000 스터디 00    02 03    05
-     * 1250 스터디    01    03 04
-     * 3000 스터디 00 01 02       05
-     */
+router.route('/testcase3').get(testSuccessCase(
+  studyRoomScheduleTestCase3,
+  parser('1000 1250 1000 1000 1250 1000'),
+  parser('3000 3000 3000 1250 1250 1000'),
+));
 
-    res.status(200).json({ message: '결과' });
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: 'error' });
-  }
-});
 // test case 4
 router.route('/testcase4').get(async (req, res) => {
   try {

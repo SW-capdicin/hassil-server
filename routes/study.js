@@ -681,6 +681,7 @@ async function doReservation(
     await t.commit();
   } catch (err) {
     console.error(err);
+    console.error(err.data && err.data.error && err.data.error);
     await t.rollback();
   }
 }

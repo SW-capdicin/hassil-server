@@ -13,7 +13,7 @@ const { generateDummy, generateDummyForDemo } = require('./models/dummy');
 const app = express();
 app.set('port', process.env.PORT);
 
-const whiteList = ['http://localhost:3000', 'https://www.hassil.shop'];
+const whiteList = ['http://localhost:3000', 'https://hassil.ga'];
 
 // force가 true이면 DB reset
 const force = false;

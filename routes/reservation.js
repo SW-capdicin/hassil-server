@@ -14,6 +14,19 @@ const {
 } = require('../models');
 const router = express.Router();
 
+router.route('/history').get(async (req, res) => {
+  try {
+    const reservations = await Reservation.findAll({
+      where: { reservatingUserId: 1, status: 0 },
+      include: { model: StudyRoomSchedule, include: { model: StudyRoom } },
+    });
+    res.status(200).json(reservations);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json(err);
+  }
+});
+
 // 출석 인증 API
 router.route('/:id/member/attendance').patch(async (req, res) => {
   if (!req.user) return res.status(400).json({ message: 'no user in session' });

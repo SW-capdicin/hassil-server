@@ -7,6 +7,7 @@ const {
   StudyCafeImage,
   User,
   StudyRoomSchedule,
+  Reservation,
 } = require('../models');
 const { Op } = require('sequelize');
 
@@ -123,6 +124,19 @@ router.route('/mine').get(async (req, res) => {
       where: { userId: req.user.id },
     });
     res.status(200).json(study);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json(err);
+  }
+});
+
+router.route('/history').get(async (req, res) => {
+  try {
+    const reservations = await Reservation.findAll({
+      where: { reservatingUserId: 1, status: 0 },
+      include: { model: StudyRoomSchedule, include: { model: StudyRoom } },
+    });
+    res.status(200).json(reservations);
   } catch (err) {
     console.error(err);
     res.status(400).json(err);

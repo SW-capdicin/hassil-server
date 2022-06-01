@@ -10,10 +10,10 @@ const {
 } = require('../models');
 const createMailRequest = require('./createMailRequest');
 
-router.route('/').get(async (req, res) => {
+router.route('/reservations').get(async (req, res) => {
   try {
     const studyRoomSchedules = await sequelize.query(
-      `SELECT * FROM StudyRoomSchedule WHERE studyRoomId IN (SELECT id FROM StudyRoom WHERE studyCafeId IN (SELECT id FROM Studycafe WHERE userId=${req.user.id}));`,
+      `SELECT * FROM StudyRoomSchedule WHERE reservationId IN (SELECT id FROM StudyRoom WHERE studyCafeId IN (SELECT id FROM Studycafe WHERE userId=${req.user.id}));`,
     );
 
     console.log(studyRoomSchedules);

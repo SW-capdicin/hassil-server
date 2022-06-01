@@ -5,6 +5,7 @@ const {
   Review,
   StudyRoom,
   StudyCafeImage,
+  User,
 } = require('../models');
 const { Op } = require('sequelize');
 
@@ -195,6 +196,7 @@ router
     try {
       const reviews = await Review.findAll({
         where: { studyCafeId: req.params.id },
+        include: { model: User },
       });
       const reviewsCnt = await Review.count({
         where: { studyCafeId: req.params.id },
@@ -228,7 +230,10 @@ router
   .route('/:id/reviews/:rid')
   .get(async (req, res) => {
     try {
-      const review = await Review.findOne({ where: { id: req.params.rid } });
+      const review = await Review.findOne({
+        where: { id: req.params.rid },
+        include: { model: User },
+      });
       res.status(200).json(review);
     } catch (err) {
       console.error(err);

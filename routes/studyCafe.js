@@ -6,6 +6,7 @@ const {
   StudyRoom,
   StudyCafeImage,
   User,
+  StudyRoomSchedule,
 } = require('../models');
 const { Op } = require('sequelize');
 
@@ -29,7 +30,7 @@ router
     try {
       const studyCafe = await StudyCafe.create(
         {
-          userId: req.user.id,
+          userId: 5, //req.user.id,
           longitude: req.body.longitude,
           latitude: req.body.latitude,
           address: req.body.address,
@@ -67,6 +68,42 @@ router
           { transaction: t },
         );
         studyRooms.push(studyRoom);
+
+        const today = new Date();
+        const startDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          1,
+        ).getDate();
+        const endDate = new Date(
+          today.getFullYear(),
+          today.getMonth() + 1,
+          0,
+        ).getDate();
+
+        const yyyy = String(today.getFullYear());
+        const mm =
+          today.getMonth() + 1 < 10
+            ? '0' + String(today.getMonth() + 1)
+            : String(today.getMonth());
+
+        for (let curDate = startDate; curDate <= endDate; curDate += 1) {
+          for (let curTime = 0; curTime <= 23; curTime += 1) {
+            StudyRoomSchedule.create({
+              studyRoomId: studyRoom.id,
+              datetime:
+                yyyy +
+                '-' +
+                mm +
+                '-' +
+                `${curDate < 10 ? '0' + curDate : curDate}` +
+                ' ' +
+                curTime +
+                ':00',
+              status: 0,
+            });
+          }
+        }
       }
       await t.commit();
       res.status(200).json({ studyCafe, studyCafeImages, studyRooms });
@@ -132,7 +169,6 @@ router.route('/region2DepthNames').get(async (req, res) => {
         studyCafes: studyCafes,
       });
     }
-    console.log(studyCafesList);
     res.status(200).json(studyCafesList);
   } catch (err) {
     console.error(err);

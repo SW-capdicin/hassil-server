@@ -30,7 +30,7 @@ router
     try {
       const studyCafe = await StudyCafe.create(
         {
-          userId: 5, //req.user.id,
+          userId: req.user.id,
           longitude: req.body.longitude,
           latitude: req.body.latitude,
           address: req.body.address,

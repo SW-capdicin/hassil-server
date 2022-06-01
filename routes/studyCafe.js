@@ -5,6 +5,8 @@ const {
   Review,
   StudyRoom,
   StudyCafeImage,
+  User,
+  StudyRoomSchedule,
 } = require('../models');
 const { Op } = require('sequelize');
 
@@ -66,6 +68,42 @@ router
           { transaction: t },
         );
         studyRooms.push(studyRoom);
+
+        const today = new Date();
+        const startDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          1,
+        ).getDate();
+        const endDate = new Date(
+          today.getFullYear(),
+          today.getMonth() + 1,
+          0,
+        ).getDate();
+
+        const yyyy = String(today.getFullYear());
+        const mm =
+          today.getMonth() + 1 < 10
+            ? '0' + String(today.getMonth() + 1)
+            : String(today.getMonth());
+
+        for (let curDate = startDate; curDate <= endDate; curDate += 1) {
+          for (let curTime = 0; curTime <= 23; curTime += 1) {
+            StudyRoomSchedule.create({
+              studyRoomId: studyRoom.id,
+              datetime:
+                yyyy +
+                '-' +
+                mm +
+                '-' +
+                `${curDate < 10 ? '0' + curDate : curDate}` +
+                ' ' +
+                curTime +
+                ':00',
+              status: 0,
+            });
+          }
+        }
       }
       await t.commit();
       res.status(200).json({ studyCafe, studyCafeImages, studyRooms });
@@ -131,7 +169,6 @@ router.route('/region2DepthNames').get(async (req, res) => {
         studyCafes: studyCafes,
       });
     }
-    console.log(studyCafesList);
     res.status(200).json(studyCafesList);
   } catch (err) {
     console.error(err);
@@ -145,7 +182,10 @@ router
     try {
       const studyCafe = await StudyCafe.findOne({
         where: { id: req.params.id },
-        include: [{ model: Review }, { model: StudyCafeImage }],
+        include: [
+          { model: Review, include: { model: User } },
+          { model: StudyCafeImage },
+        ],
       });
       res.status(200).json(studyCafe);
     } catch (err) {
@@ -189,32 +229,82 @@ router
     }
   });
 
-router.route('/:id/reviews').post(async (req, res) => {
-  try {
-    const review = await Review.create({
-      studyCafeId: req.params.id,
-      userId: req.user.id,
-      contents: req.body.contents,
-      rating: req.body.rating,
-    });
-    res.status(200).json(review);
-  } catch (err) {
-    console.error(err);
-    res.status(400).json(err);
-  }
-});
+router
+  .route('/:id/reviews')
+  .get(async (req, res) => {
+    try {
+      const reviews = await Review.findAll({
+        where: { studyCafeId: req.params.id },
+        include: { model: User },
+      });
+      const reviewsCnt = await Review.count({
+        where: { studyCafeId: req.params.id },
+      });
+      const reviewsSum = await Review.sum('rating', {
+        where: { studyCafeId: req.params.id },
+      });
+      const reviewsAvg = reviewsSum / reviewsCnt;
+      res.status(200).json({ reviews, reviewsCnt, reviewsAvg });
+    } catch (err) {
+      console.error(err);
+      res.status(400).json(err);
+    }
+  })
+  .post(async (req, res) => {
+    try {
+      const review = await Review.create({
+        studyCafeId: req.params.id,
+        userId: req.user.id,
+        contents: req.body.contents,
+        rating: req.body.rating,
+      });
+      res.status(200).json(review);
+    } catch (err) {
+      console.error(err);
+      res.status(400).json(err);
+    }
+  });
 
-router.route('/:id/reviews/:rid').delete(async (req, res) => {
-  try {
-    const result = await Review.destroy({
-      where: { id: req.params.rid },
-    });
-    res.status(200).json(result);
-  } catch (err) {
-    console.error(err);
-    res.status(400).json(err);
-  }
-});
+router
+  .route('/:id/reviews/:rid')
+  .get(async (req, res) => {
+    try {
+      const review = await Review.findOne({
+        where: { id: req.params.rid },
+        include: { model: User },
+      });
+      res.status(200).json(review);
+    } catch (err) {
+      console.error(err);
+      res.status(400).json(err);
+    }
+  })
+  .patch(async (req, res) => {
+    try {
+      const review = await Review.update(
+        {
+          contents: req.body.contents,
+          rating: req.body.rating,
+        },
+        { where: { id: req.params.rid } },
+      );
+      res.status(200).json(review);
+    } catch (err) {
+      console.error(err);
+      res.status(400).json(err);
+    }
+  })
+  .delete(async (req, res) => {
+    try {
+      const result = await Review.destroy({
+        where: { id: req.params.rid },
+      });
+      res.status(200).json(result);
+    } catch (err) {
+      console.error(err);
+      res.status(400).json(err);
+    }
+  });
 
 router
   .route('/:id/rooms')

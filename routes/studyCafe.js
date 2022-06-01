@@ -182,7 +182,10 @@ router
     try {
       const studyCafe = await StudyCafe.findOne({
         where: { id: req.params.id },
-        include: [{ model: Review }, { model: StudyCafeImage }],
+        include: [
+          { model: Review, include: { model: User } },
+          { model: StudyCafeImage },
+        ],
       });
       res.status(200).json(studyCafe);
     } catch (err) {

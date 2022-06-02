@@ -17,6 +17,7 @@ let minMovingCnt = 1000000;
 let minPriceSum = 1000000;
 let message = '';
 const maxRadius = 1000; // 단위 (m)
+const timeDiff = [1, -1, 2, -2];
 
 function clearAlternativePaths() {
   number1Path = [];
@@ -85,7 +86,7 @@ async function getMinimalMovingPath(
   for (let i = 0; i < timeblocks; i++) {
     possibleSchedules[i] = [];
 
-    const [ schedules ] = await sequelize.query(
+    const [schedules] = await sequelize.query(
       'SELECT S.id, S.studyRoomId, S.datetime, R.pricePerHour, C.id AS "studyCafeId", C.name AS "studyCafeName", R.name AS "studyRoomName", C.latitude, C.longitude FROM hassil.StudyRoomSchedule S LEFT JOIN hassil.StudyRoom R ON S.studyRoomId = R.id LEFT JOIN hassil.StudyCafe C ON R.studyCafeId = C.id WHERE S.status = 0 and S.datetime = "' +
         startTime.add(i, 'hours').format('YYYY-MM-DD HH:mm:ss') +
         '"',
@@ -190,8 +191,6 @@ async function getNumber2Path(
   longitude,
   latitude,
 ) {
-  const timeDiff = [1, -1, 2, -2];
-
   for (let i = 0; i < timeDiff.length; i++) {
     startTime.add(timeDiff[i], 'hours');
     endTime.add(timeDiff[i], 'hours');
@@ -219,17 +218,17 @@ async function getNumber2Path(
   }
 } // end of getNumber2Path()
 
-const getCost = (list) => list.reduce((acc, cur) => (acc + cur.pricePerHour), 0);
+const getCost = (list) => list.reduce((acc, cur) => acc + cur.pricePerHour, 0);
 
 const getMovingCount = (list) => {
   const mapR = {};
   const mapC = {};
   list.map(({ studyRoomId, studyCafeId }) => {
-    mapR[studyRoomId] = true
-    mapC[studyCafeId] = true
+    mapR[studyRoomId] = true;
+    mapC[studyCafeId] = true;
   });
   return Object.keys(mapC).length;
-}
+};
 
 async function getNumber3Path(
   option,
@@ -239,7 +238,6 @@ async function getNumber3Path(
   longitude,
   latitude,
 ) {
-  const timeDiff = [1, -1, 2, -2];
   clearGlobalVariables();
   let best = null;
   for (let i = 0; i < timeDiff.length; i++) {
@@ -255,9 +253,10 @@ async function getNumber3Path(
       );
       if (minCostPath.length == timeblocks) {
         number3Path = minCostPath;
-        if (!best) { best = minCostPath }
-        else {
-          getCost(best) > getCost(minCostPath) && (best = minCostPath)
+        if (!best) {
+          best = minCostPath;
+        } else {
+          getCost(best) > getCost(minCostPath) && (best = minCostPath);
         }
       }
     } else if (option == 1) {
@@ -270,9 +269,11 @@ async function getNumber3Path(
       );
       if (minMovingPath.length == timeblocks) {
         number3Path = minMovingPath;
-        if (!best) { best = minMovingPath }
-        else {
-          getMovingCount(best) > getMovingCount(minMovingPath) && (best = minMovingPath)
+        if (!best) {
+          best = minMovingPath;
+        } else {
+          getMovingCount(best) > getMovingCount(minMovingPath) &&
+            (best = minMovingPath);
         }
       }
     }
@@ -375,7 +376,7 @@ const scheduleRecommend = async (req, res) => {
     console.error(err);
     res.status(400).json({ message: 'error' });
   }
-}
+};
 
 // 스터디룸 환승 경로 추천 API
 // http://localhost:8080/api/schedule-recommend/
@@ -383,5 +384,5 @@ router.route('/').post(scheduleRecommend);
 
 module.exports = {
   router,
-  scheduleRecommend
+  scheduleRecommend,
 };

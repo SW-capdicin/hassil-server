@@ -381,13 +381,13 @@ router
 
 router.route('/:id/rooms/:rid/study-room-schedules').get(async (req, res) => {
   try {
-    const selectedDate = new Date(req.body.date);
+    const selectedDate = new Date(req.query.date);
     selectedDate.setDate(selectedDate.getDate() + 1);
 
     const studyRoomSchedules = await StudyRoomSchedule.findAll({
       where: {
         studyRoomId: req.params.rid,
-        datetime: { [Op.gte]: new Date(req.body.date), [Op.lt]: selectedDate },
+        datetime: { [Op.gte]: new Date(req.query.date), [Op.lt]: selectedDate },
       },
     });
     res.status(200).json(studyRoomSchedules);

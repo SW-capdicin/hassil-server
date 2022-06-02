@@ -185,6 +185,7 @@ router
         include: [
           { model: Review, include: { model: User } },
           { model: StudyCafeImage },
+          { model: StudyRoom },
         ],
       });
       res.status(200).json(studyCafe);

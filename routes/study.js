@@ -463,22 +463,20 @@ router
   .post(async (req, res) => {
     const t = await sequelize.transaction();
     try {
-      const reservation = await Reservation.create(
-        {
-          studyId: req.params.id,
-          reservatingUserId: req.user.id,
-          status: req.body.status,
-          personCnt: req.body.personCnt,
-        },
-        { transaction: t },
-      );
-
-      await Study.increment(
-        { meetingCnt: 1 },
-        { where: { id: req.params.id }, transaction: t },
-      );
-
-      if (reservation.status == 3) {
+      if (req.body.status == 3) {
+        const reservation = await Reservation.create(
+          {
+            studyId: req.params.id,
+            reservatingUserId: req.user.id,
+            status: req.body.status,
+            personCnt: req.body.personCnt,
+          },
+          { transaction: t },
+        );
+        await Study.increment(
+          { meetingCnt: 1 },
+          { where: { id: req.params.id }, transaction: t },
+        );
         const meeting = await Meeting.create(
           {
             reservationId: reservation.id,
@@ -491,80 +489,22 @@ router
         );
         await t.commit();
         res.status(200).json({ reservation, meeting });
-      } else if (reservation.status == 0) {
-        const studyRoom = await StudyRoom.findOne({
-          where: { id: req.body.studyRoomId },
-        });
-        const pricePerPerson = studyRoom.pricePerHour;
+      } else if (req.body.status == 0) {
+        const pricePerPerson = 10000;
         const members = await getAliveMembers(req.params.id);
         const nicknames = await getNoPointMemberNames(pricePerPerson, members);
 
         if (nicknames.length > 0) {
-          await t.rollback();
           res.status(402).json(nicknames);
         } else {
-          const study = await Study.findOne({ where: { id: req.params.id } });
-          for (let i = 0; i < members.length; i++) {
-            await User.increment(
-              { point: -pricePerPerson },
-              { where: { id: members[i].userId }, transaction: t },
-            );
-            await PointHistory.create(
-              {
-                userId: members[i].userId,
-                balance: members[i].User.point - pricePerPerson,
-                amount: pricePerPerson,
-                content: `스터디(${study.name}) 장소 결제`,
-                status: 1, // 0: 입금,  1 : 출금
-              },
-              { transaction: t },
-            );
-          } // end of for()
-
-          const result = await StudyRoomSchedule.update(
-            {
-              reservationId: reservation.id,
-              status: 1,
-            },
-            {
-              where: {
-                studyRoomId: req.body.studyRoomId,
-                datetime: req.body.datetime,
-                status: 0,
-              },
-              transaction: t,
-            },
+          const reservation = doReservation(
+            req.user.id,
+            req.params.id,
+            req.body.studyRoomSchedules,
+            pricePerPerson,
+            members,
           );
-          if (result == 0) {
-            // A result is the number of affected rows.
-            throw 'alert: This study room schedule cannot be reserved.';
-          }
-
-          const studyRoomSchedule = await StudyRoomSchedule.findOne({
-            where: {
-              studyRoomId: req.body.studyRoomId,
-              datetime: req.body.datetime,
-            },
-          });
-          const user = await User.findOne({
-            where: { id: reservation.reservatingUserId },
-          });
-          const studyRoom = await StudyRoom.findOne({
-            where: { id: studyRoomSchedule.studyRoomId },
-          });
-          const studyCafe = await StudyCafe.findOne({
-            where: { id: studyRoom.studyCafeId },
-          });
-          await createMailRequest(
-            '예약확인 메일입니다.',
-            '${userName}님! 안녕하세요? HASSIL을 이용해 주셔서 진심으로 감사드립니다.<br/> 스터디룸 예약이 정상적으로 이루어졌습니다. 아래 예약내역을 확인해주세요.<br/><br/>' +
-              `예약자: ${user.name}, 스터디카페: ${studyCafe.name}, 스터디룸: ${studyRoom.name}, 이용일시: ${studyRoomSchedule.datetime}, 예약번호: ${studyRoomSchedule.reservationId}`,
-            user,
-          );
-
-          await t.commit();
-
-          res.status(200).json({ reservation, result });
+          res.status(200).json({ reservation });
         }
       }
     } catch (err) {
@@ -685,7 +625,7 @@ async function doReservation(
     );
 
     for (let i = 0; i < studyRoomSchedules.length; i++) {
-      await StudyRoomSchedule.update(
+      const result = await StudyRoomSchedule.update(
         {
           reservationId: reservation.id,
           status: 1,
@@ -697,6 +637,9 @@ async function doReservation(
           transaction: t,
         },
       );
+      if (result == 0) {
+        throw 'alert: This study room schedule cannot be reserved.';
+      }
       const studyRoomSchedule = await StudyRoomSchedule.findOne({
         where: {
           id: studyRoomSchedules[i].id,
@@ -720,6 +663,7 @@ async function doReservation(
     }
 
     await t.commit();
+    return reservation;
   } catch (err) {
     console.error(err);
     await t.rollback();
@@ -732,7 +676,7 @@ router.route('/:id/schedule-recommend/reservations').post(async (req, res) => {
   try {
     const userId = req.user.id;
     const studyId = req.params.id;
-    const studyRoomScheduleIds = req.body.studyRoomScheduleIds;
+    const studyRoomSchedules = req.body.studyRoomScheduleIds;
     const pricePerPerson = req.body.pricePerPerson;
     const members = await getAliveMembers(studyId);
     const nicknames = await getNoPointMemberNames(pricePerPerson, members);
@@ -743,7 +687,7 @@ router.route('/:id/schedule-recommend/reservations').post(async (req, res) => {
       await doReservation(
         userId,
         studyId,
-        studyRoomScheduleIds,
+        studyRoomSchedules,
         pricePerPerson,
         members,
       );

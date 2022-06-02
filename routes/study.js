@@ -492,50 +492,80 @@ router
         await t.commit();
         res.status(200).json({ reservation, meeting });
       } else if (reservation.status == 0) {
-        const result = await StudyRoomSchedule.update(
-          {
-            reservationId: reservation.id,
-            status: 1,
-          },
-          {
+        const studyRoom = await StudyRoom.findOne({
+          where: { id: req.body.studyRoomId },
+        });
+        const pricePerPerson = studyRoom.pricePerHour;
+        const members = await getAliveMembers(req.params.id);
+        const nicknames = await getNoPointMemberNames(pricePerPerson, members);
+
+        if (nicknames.length > 0) {
+          await t.rollback();
+          res.status(402).json(nicknames);
+        } else {
+          const study = await Study.findOne({ where: { id: req.params.id } });
+          for (let i = 0; i < members.length; i++) {
+            await User.increment(
+              { point: -pricePerPerson },
+              { where: { id: members[i].userId }, transaction: t },
+            );
+            await PointHistory.create(
+              {
+                userId: members[i].userId,
+                balance: members[i].User.point - pricePerPerson,
+                amount: pricePerPerson,
+                content: `스터디(${study.name}) 장소 결제`,
+                status: 1, // 0: 입금,  1 : 출금
+              },
+              { transaction: t },
+            );
+          } // end of for()
+
+          const result = await StudyRoomSchedule.update(
+            {
+              reservationId: reservation.id,
+              status: 1,
+            },
+            {
+              where: {
+                studyRoomId: req.body.studyRoomId,
+                datetime: req.body.datetime,
+                status: 0,
+              },
+              transaction: t,
+            },
+          );
+          if (result == 0) {
+            // A result is the number of affected rows.
+            throw 'alert: This study room schedule cannot be reserved.';
+          }
+
+          const studyRoomSchedule = await StudyRoomSchedule.findOne({
             where: {
               studyRoomId: req.body.studyRoomId,
               datetime: req.body.datetime,
-              status: 0,
             },
-            transaction: t,
-          },
-        );
-        if (result == 0) {
-          // A result is the number of affected rows.
-          throw 'alert: This study room schedule cannot be reserved.';
+          });
+          const user = await User.findOne({
+            where: { id: reservation.reservatingUserId },
+          });
+          const studyRoom = await StudyRoom.findOne({
+            where: { id: studyRoomSchedule.studyRoomId },
+          });
+          const studyCafe = await StudyCafe.findOne({
+            where: { id: studyRoom.studyCafeId },
+          });
+          await createMailRequest(
+            '예약확인 메일입니다.',
+            '${userName}님! 안녕하세요? HASSIL을 이용해 주셔서 진심으로 감사드립니다.<br/> 스터디룸 예약이 정상적으로 이루어졌습니다. 아래 예약내역을 확인해주세요.<br/><br/>' +
+              `예약자: ${user.name}, 스터디카페: ${studyCafe.name}, 스터디룸: ${studyRoom.name}, 이용일시: ${studyRoomSchedule.datetime}, 예약번호: ${studyRoomSchedule.reservationId}`,
+            user,
+          );
+
+          await t.commit();
+
+          res.status(200).json({ reservation, result });
         }
-
-        const studyRoomSchedule = await StudyRoomSchedule.findOne({
-          where: {
-            studyRoomId: req.body.studyRoomId,
-            datetime: req.body.datetime,
-          },
-        });
-        const user = await User.findOne({
-          where: { id: reservation.reservatingUserId },
-        });
-        const studyRoom = await StudyRoom.findOne({
-          where: { id: studyRoomSchedule.studyRoomId },
-        });
-        const studyCafe = await StudyCafe.findOne({
-          where: { id: studyRoom.studyCafeId },
-        });
-        await createMailRequest(
-          '예약확인 메일입니다.',
-          '${userName}님! 안녕하세요? HASSIL을 이용해 주셔서 진심으로 감사드립니다.<br/> 스터디룸 예약이 정상적으로 이루어졌습니다. 아래 예약내역을 확인해주세요.<br/><br/>' +
-            `예약자: ${user.name}, 스터디카페: ${studyCafe.name}, 스터디룸: ${studyRoom.name}, 이용일시: ${studyRoomSchedule.datetime}, 예약번호: ${studyRoomSchedule.reservationId}`,
-          user,
-        );
-
-        await t.commit();
-
-        res.status(200).json({ reservation, result });
       }
     } catch (err) {
       await t.rollback();
@@ -615,18 +645,29 @@ async function getNoPointMemberNames(pricePerPerson, members) {
 async function doReservation(
   userId,
   studyId,
-  studyRoomScheduleIds,
+  studyRoomSchedules,
   pricePerPerson,
   members,
 ) {
   const t = await sequelize.transaction();
   try {
+    const study = await Study.findOne({ where: { id: studyId } });
     for (let i = 0; i < members.length; i++) {
       await User.increment(
         { point: -pricePerPerson },
         { where: { id: members[i].userId }, transaction: t },
       );
-    }
+      await PointHistory.create(
+        {
+          userId: members[i].userId,
+          balance: members[i].User.point - pricePerPerson,
+          amount: pricePerPerson,
+          content: `스터디(${study.name}) 장소 결제`,
+          status: 1, // 0: 입금,  1 : 출금
+        },
+        { transaction: t },
+      );
+    } // end of for()
 
     const reservation = await Reservation.create(
       {
@@ -643,7 +684,7 @@ async function doReservation(
       { where: { id: studyId }, transaction: t },
     );
 
-    for (let i = 0; i < studyRoomScheduleIds.length; i++) {
+    for (let i = 0; i < studyRoomSchedules.length; i++) {
       await StudyRoomSchedule.update(
         {
           reservationId: reservation.id,
@@ -651,14 +692,14 @@ async function doReservation(
         },
         {
           where: {
-            id: studyRoomScheduleIds[i].id,
+            id: studyRoomSchedules[i].id,
           },
           transaction: t,
         },
       );
       const studyRoomSchedule = await StudyRoomSchedule.findOne({
         where: {
-          id: studyRoomScheduleIds[i].id,
+          id: studyRoomSchedules[i].id,
         },
       });
       const user = await User.findOne({

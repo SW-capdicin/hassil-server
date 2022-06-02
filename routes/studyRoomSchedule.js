@@ -23,7 +23,7 @@ router.route('/reservations').get(async (req, res) => {
           include: {
             model: StudyCafe,
             required: true,
-            where: { userId: 1 },
+            where: { userId: req.user.id },
           },
         },
       },

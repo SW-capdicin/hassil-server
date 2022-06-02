@@ -645,7 +645,7 @@ async function getNoPointMemberNames(pricePerPerson, members) {
 async function doReservation(
   userId,
   studyId,
-  studyRoomScheduleIds,
+  studyRoomSchedules,
   pricePerPerson,
   members,
 ) {
@@ -684,7 +684,7 @@ async function doReservation(
       { where: { id: studyId }, transaction: t },
     );
 
-    for (let i = 0; i < studyRoomScheduleIds.length; i++) {
+    for (let i = 0; i < studyRoomSchedules.length; i++) {
       await StudyRoomSchedule.update(
         {
           reservationId: reservation.id,
@@ -692,14 +692,14 @@ async function doReservation(
         },
         {
           where: {
-            id: studyRoomScheduleIds[i].id,
+            id: studyRoomSchedules[i].id,
           },
           transaction: t,
         },
       );
       const studyRoomSchedule = await StudyRoomSchedule.findOne({
         where: {
-          id: studyRoomScheduleIds[i].id,
+          id: studyRoomSchedules[i].id,
         },
       });
       const user = await User.findOne({

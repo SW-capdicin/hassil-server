@@ -490,7 +490,7 @@ router
         await t.commit();
         res.status(200).json({ reservation, meeting });
       } else if (req.body.status == 0) {
-        const pricePerPerson = 10000;
+        const pricePerPerson = req.body.pricePerPerson;
         const members = await getAliveMembers(req.params.id);
         const nicknames = await getNoPointMemberNames(pricePerPerson, members);
 

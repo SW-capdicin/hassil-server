@@ -379,4 +379,16 @@ router
     }
   });
 
+router.route('/:id/rooms/:rid/study-room-schedules').get(async (req, res) => {
+  try {
+    const studyRoomSchedules = await StudyRoomSchedule.findAll({
+      where: { studyRoomId: req.params.rid },
+    });
+    res.status(200).json(studyRoomSchedules);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json(err);
+  }
+});
+
 module.exports = router;

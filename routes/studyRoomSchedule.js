@@ -16,13 +16,14 @@ router.route('/reservations').get(async (req, res) => {
       include: {
         model: StudyRoomSchedule,
         required: true, // the `required: true` options converts the query from the default OUTER JOIN to an INNER JOIN
+        where: { status: 1 },
         include: {
           model: StudyRoom,
           required: true,
           include: {
             model: StudyCafe,
             required: true,
-            where: { userId: req.user.id },
+            where: { userId: 1 },
           },
         },
       },

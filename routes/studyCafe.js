@@ -388,13 +388,15 @@ router.route('/:id/rooms/:rid/study-room-schedules').get(async (req, res) => {
     selectedDateFrom.setUTCHours(0);
     selectedDateTo.setDate(selectedDateTo.getDate() + 2);
     selectedDateTo.setUTCHours(0);
-    console.log(selectedDateFrom, selectedDateTo);
+
+    const todayDate = new Date();
+    todayDate.setHours(todayDate.getHours() + 9);
 
     const studyRoomSchedules = await StudyRoomSchedule.findAll({
       where: {
         studyRoomId: req.params.rid,
         datetime: {
-          [Op.gte]: selectedDateFrom,
+          [Op.gte]: todayDate > selectedDateFrom ? todayDate : selectedDateFrom,
           [Op.lt]: selectedDateTo,
         },
       },

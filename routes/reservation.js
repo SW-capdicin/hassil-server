@@ -17,7 +17,7 @@ const router = express.Router();
 router.route('/history').get(async (req, res) => {
   try {
     const reservations = await Reservation.findAll({
-      where: { reservatingUserId: 1, status: 0 },
+      where: { reservatingUserId: req.user.id, status: 0 },
       include: { model: StudyRoomSchedule, include: { model: StudyRoom } },
     });
     res.status(200).json(reservations);

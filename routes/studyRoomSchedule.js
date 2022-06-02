@@ -13,7 +13,7 @@ const createMailRequest = require('./createMailRequest');
 router.route('/reservations').get(async (req, res) => {
   try {
     const studyRoomSchedules = await sequelize.query(
-      `SELECT * FROM Reservation WHERE id IN (SELECT reservationId FROM StudyRoomSchedule WHERE studyRoomId IN (SELECT id FROM StudyRoom WHERE studyCafeId IN (SELECT id FROM StudyCafe WHERE userId=${req.user.id})))`,
+      `SELECT * FROM Reservation INNER JOIN (SELECT * FROM StudyRoomSchedule WHERE status=1 and studyRoomId IN (SELECT id FROM StudyRoom WHERE studyCafeId IN (SELECT id FROM StudyCafe WHERE userId=${req.user.id}))) as StudyRoomSchedule ON Reservation.id = StudyRoomSchedule.reservationId;`,
     );
 
     console.log(studyRoomSchedules);

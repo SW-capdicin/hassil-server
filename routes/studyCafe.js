@@ -381,16 +381,12 @@ router
 
 router.route('/:id/rooms/:rid/study-room-schedules').get(async (req, res) => {
   try {
-    // first aid to the timezone 9 hour problem
     const selectedDateFrom = new Date(req.query.date);
     const selectedDateTo = new Date(req.query.date);
-    selectedDateFrom.setDate(selectedDateFrom.getDate() + 1);
-    selectedDateFrom.setUTCHours(0);
-    selectedDateTo.setDate(selectedDateTo.getDate() + 2);
-    selectedDateTo.setUTCHours(0);
+    selectedDateTo.setDate(selectedDateTo.getDate() + 1);
 
     const todayDate = new Date();
-    todayDate.setHours(todayDate.getHours() + 9);
+    todayDate.setHours(todayDate.getHours() + 9); // first aid to the timezone 9 hour problem
 
     const studyRoomSchedules = await StudyRoomSchedule.findAll({
       where: {

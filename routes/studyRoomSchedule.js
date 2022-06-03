@@ -37,36 +37,34 @@ router.route('/reservations').get(async (req, res) => {
   }
 });
 
-router.route('/:id/').patch(async (req, res) => {
+router.route('/reservations/:id/').patch(async (req, res) => {
   const t = await sequelize.transaction();
   try {
+    const result = await Reservation.update(
+      {
+        status: 1,
+      },
+      {
+        where: { id: req.params.id },
+      },
+    );
     await StudyRoomSchedule.update(
       {
         status: 2,
       },
       {
-        where: { id: req.params.id },
+        where: { reservationId: req.params.id },
         transaction: t,
       },
     );
 
     const studyRoomSchedule = await StudyRoomSchedule.findOne({
-      where: { id: req.params.id },
+      where: { reservationId: req.params.id },
       transaction: t,
     });
 
-    const result = await Reservation.update(
-      {
-        status: 2,
-      },
-      {
-        where: { id: studyRoomSchedule.reservationId },
-        transaction: t,
-      },
-    );
-
     const reservation = await Reservation.findOne({
-      where: { id: studyRoomSchedule.reservationId },
+      where: { id: req.params.id },
     });
     const user = await User.findOne({
       where: { id: reservation.reservatingUserId },

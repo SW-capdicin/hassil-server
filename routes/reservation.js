@@ -17,9 +17,23 @@ const router = express.Router();
 router.route('/history').get(async (req, res) => {
   try {
     const reservations = await Reservation.findAll({
-      where: { reservatingUserId: req.user.id, status: 0 },
-      include: { model: StudyRoomSchedule, include: { model: StudyRoom } },
+      where: { reservatingUserId: req.user.id },
+      include: {
+        model: StudyRoomSchedule,
+        required: true, // the `required: true` options converts the query from the default OUTER JOIN to an INNER JOIN
+        where: { status: 1 },
+        include: {
+          model: StudyRoom,
+          required: true,
+          include: {
+            model: StudyCafe,
+            required: true,
+          },
+        },
+      },
     });
+
+    console.log(reservations);
     res.status(200).json(reservations);
   } catch (err) {
     console.error(err);

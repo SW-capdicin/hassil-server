@@ -497,7 +497,7 @@ router
         if (nicknames.length > 0) {
           res.status(402).json(nicknames);
         } else {
-          const reservation = doReservation(
+          const reservation = await doReservation(
             req.user.id,
             req.params.id,
             req.body.studyRoomSchedules,

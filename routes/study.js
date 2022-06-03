@@ -461,9 +461,9 @@ router
     }
   })
   .post(async (req, res) => {
-    const t = await sequelize.transaction();
-    try {
-      if (req.body.status == 3) {
+    if (req.body.status == 3) {
+      const t = await sequelize.transaction();
+      try {
         const reservation = await Reservation.create(
           {
             studyId: req.params.id,
@@ -489,7 +489,12 @@ router
         );
         await t.commit();
         res.status(200).json({ reservation, meeting });
-      } else if (req.body.status == 0) {
+      } catch (err) {
+        await t.rollback();
+        res.status(400).json(err);
+      }
+    } else if (req.body.status == 0) {
+      try {
         const pricePerPerson = req.body.pricePerPerson;
         const members = await getAliveMembers(req.params.id);
         const nicknames = await getNoPointMemberNames(pricePerPerson, members);
@@ -506,12 +511,10 @@ router
           );
           res.status(200).json({ reservation });
         }
+      } catch (err) {
+        res.status(400).json(err);
       }
-    } catch (err) {
-      await t.rollback();
-      console.log(err);
-      res.status(400).json(err);
-    }
+    } // end of else if
   });
 
 router

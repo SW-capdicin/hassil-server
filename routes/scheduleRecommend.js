@@ -85,7 +85,7 @@ async function getMinimalMovingPath(
   for (let i = 0; i < timeblocks; i++) {
     possibleSchedules[i] = [];
 
-    const [ schedules ] = await sequelize.query(
+    const [schedules] = await sequelize.query(
       'SELECT S.id, S.studyRoomId, S.datetime, R.pricePerHour, C.id AS "studyCafeId", C.name AS "studyCafeName", R.name AS "studyRoomName", C.latitude, C.longitude FROM hassil.StudyRoomSchedule S LEFT JOIN hassil.StudyRoom R ON S.studyRoomId = R.id LEFT JOIN hassil.StudyCafe C ON R.studyCafeId = C.id WHERE S.status = 0 and S.datetime = "' +
         startTime.add(i, 'hours').format('YYYY-MM-DD HH:mm:ss') +
         '"',
@@ -219,17 +219,17 @@ async function getNumber2Path(
   }
 } // end of getNumber2Path()
 
-const getCost = (list) => list.reduce((acc, cur) => (acc + cur.pricePerHour), 0);
+const getCost = (list) => list.reduce((acc, cur) => acc + cur.pricePerHour, 0);
 
 const getMovingCount = (list) => {
   const mapR = {};
   const mapC = {};
   list.map(({ studyRoomId, studyCafeId }) => {
-    mapR[studyRoomId] = true
-    mapC[studyCafeId] = true
+    mapR[studyRoomId] = true;
+    mapC[studyCafeId] = true;
   });
   return Object.keys(mapC).length;
-}
+};
 
 async function getNumber3Path(
   option,
@@ -255,9 +255,10 @@ async function getNumber3Path(
       );
       if (minCostPath.length == timeblocks) {
         number3Path = minCostPath;
-        if (!best) { best = minCostPath }
-        else {
-          getCost(best) > getCost(minCostPath) && (best = minCostPath)
+        if (!best) {
+          best = minCostPath;
+        } else {
+          getCost(best) > getCost(minCostPath) && (best = minCostPath);
         }
       }
     } else if (option == 1) {
@@ -270,9 +271,11 @@ async function getNumber3Path(
       );
       if (minMovingPath.length == timeblocks) {
         number3Path = minMovingPath;
-        if (!best) { best = minMovingPath }
-        else {
-          getMovingCount(best) > getMovingCount(minMovingPath) && (best = minMovingPath)
+        if (!best) {
+          best = minMovingPath;
+        } else {
+          getMovingCount(best) > getMovingCount(minMovingPath) &&
+            (best = minMovingPath);
         }
       }
     }
@@ -305,8 +308,8 @@ async function getResult(
   radius,
   startTime,
   endTime,
-  longitude,
   latitude,
+  longitude,
 ) {
   if (option == 0) {
     await getMinimalCostPath(radius, startTime, endTime, longitude, latitude);
@@ -351,15 +354,15 @@ router.route('/').post(async (req, res) => {
     await getResult(
       req.body.option, // 0: 최소요금, 1: 최소이동
       req.body.radius,
-      moment(req.body.startTime),
-      moment(req.body.endTime),
-      req.body.longitude,
-      req.body.latitude,
+      moment('2022-06-24 12:00:00'),
+      moment('2022-06-24 18:00:00'),
+      37.283071,
+      127.044954,
     );
 
     answer = {
-      latitude: req.body.latitude,
-      longitude: req.body.longitude,
+      latitude: 37.283071,
+      longitude: 127.044954,
       radius: req.body.radius,
       message: message,
     };

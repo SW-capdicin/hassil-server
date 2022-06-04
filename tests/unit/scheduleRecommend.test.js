@@ -16,6 +16,7 @@ const {
   studyRoomScheduleTestCase9,
   studyRoomScheduleTestCase10,
   studyRoomScheduleTestCase11,
+  studyRoomScheduleTestCase12,
 } = require('../../models/dummy');
 
 // test dataset API - generate parent dummy data
@@ -231,6 +232,29 @@ router.route('/testcase11').get(async (req, res) => {
   try {
     await clearSchedulesGTEid1000();
     await studyRoomScheduleTestCase11();
+    // [how about these - number 1,2,3 예제 (반경만/시간만/둘다 모두 path 검색 가능한 경우)]
+    // 위도 경도 (100, 100) 과 (100.007, 100.007) 거리 = 800m
+    /* (number 1 최소 환승 정답) 2000 2000 2000 1000 1000 1000
+     * (number 1 최소 요금 정답) 2000 1000 1250 1000 1000 1000
+     * (number 2 최소 환승 정답) 1000 1250 1000 1000 1000 1000
+     * (number 2 최소 요금 정답) 1000 1250 1000 1000 1000 1000
+     * 1000 스터디(100,100)          01    03 04 05 06
+     * 1250 스터디(100,100)             02 03 04
+     * 3000 스터디(100,100)             02       05    07
+     * 2000 스터디(100.07,100.07) 00 01 02
+     */
+
+    res.status(200).json({ message: '결과' });
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ message: 'error' });
+  }
+});
+// test case 12 (testcase 11 + 12시간)
+router.route('/testcase12').get(async (req, res) => {
+  try {
+    await clearSchedulesGTEid1000();
+    await studyRoomScheduleTestCase12();
     // [how about these - number 1,2,3 예제 (반경만/시간만/둘다 모두 path 검색 가능한 경우)]
     // 위도 경도 (100, 100) 과 (100.007, 100.007) 거리 = 800m
     /* (number 1 최소 환승 정답) 2000 2000 2000 1000 1000 1000

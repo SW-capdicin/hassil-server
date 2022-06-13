@@ -36,7 +36,7 @@ router
   // 회원 가입 및 회원 정보 수정
   .patch(async (req, res) => {
     if (!req.user)
-      return res.status(400).json({ message: 'no user in session' });
+      return res.status(401).json({ message: 'no user in session' });
     const id = req.user.id;
     try {
       await User.update(
@@ -58,7 +58,7 @@ router
   // 회원 탈퇴
   .delete(async (req, res) => {
     if (!req.user)
-      return res.status(400).json({ message: 'no user in session' });
+      return res.status(401).json({ message: 'no user in session' });
     const id = req.user.id;
     try {
       await User.destroy({ where: { id } });
@@ -79,7 +79,7 @@ router.post('/logout', (req, res, next) => {
 
 // 사용자 포인트 내역 조회
 router.route('/:id/point-history').get(async (req, res) => {
-  if (!req.user) return res.status(400).json({ message: 'no user in session' });
+  if (!req.user) return res.status(401).json({ message: 'no user in session' });
   const userId = req.user.id;
   try {
     const data = await PointHistory.findAll({ where: { userId } });

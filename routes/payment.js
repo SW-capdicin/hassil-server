@@ -6,7 +6,7 @@ const secretKey = process.env.TOSS_SECRET_KEY;
 
 // 결제 승인 API
 router.get('/success', function (req, res) {
-  if (!req.user) return res.status(400).json({ message: 'no user in session' });
+  if (!req.user) return res.status(401).json({ message: 'no user in session' });
   const paymentKey = req.query.paymentKey;
   const orderId = req.query.orderId;
   const amount = req.query.amount;
@@ -67,7 +67,7 @@ router.get('/success', function (req, res) {
 
 // 포인트를 현금화
 router.route('/cash').patch(async (req, res) => {
-  if (!req.user) return res.status(400).json({ message: 'no user in session' });
+  if (!req.user) return res.status(401).json({ message: 'no user in session' });
   const t = await sequelize.transaction();
   const userId = req.user.id;
   const amount = req.body.amount;
@@ -77,7 +77,7 @@ router.route('/cash').patch(async (req, res) => {
     let newAmount = 0;
 
     if (exUser.point < amount) {
-      res.status(400).json({ message: 'not enough points' });
+      res.status(402).json({ message: 'not enough points' });
     } else {
       newAmount = exUser.point - parseInt(amount);
       // user의 point update

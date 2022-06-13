@@ -33,7 +33,7 @@ router
   // 스터디 생성
   .post(async (req, res) => {
     if (!req.user)
-      return res.status(400).json({ message: 'no user in session' });
+      return res.status(401).json({ message: 'no user in session' });
     const t = await sequelize.transaction();
     const userId = req.user.id;
     try {
@@ -46,7 +46,7 @@ router
       const newAmount = user.point - req.body.depositPerPerson;
 
       if (newAmount < 0) {
-        res.status(400).json({ message: 'not enough points' });
+        res.status(402).json({ message: 'not enough points' });
       } else {
         await User.update(
           {
@@ -100,7 +100,7 @@ router.route('/categories/:cid').get(async (req, res) => {
 
 // 스터디 목록 조회 (가입한 스터디 목록)
 router.route('/joined').get(async (req, res) => {
-  if (!req.user) return res.status(400).json({ message: 'no user in session' });
+  if (!req.user) return res.status(401).json({ message: 'no user in session' });
   try {
     const study = await Study.findAll({
       include: [{ model: StudyMember, where: { userId: req.user.id } }],
@@ -114,7 +114,7 @@ router.route('/joined').get(async (req, res) => {
 
 // 스터디 목록 조회 (검색)
 router.route('/search').get(async (req, res) => {
-  if (!req.user) return res.status(400).json({ message: 'no user in session' });
+  if (!req.user) return res.status(401).json({ message: 'no user in session' });
   const keyword = req.query.keyword;
   console.log(keyword);
   try {
@@ -271,7 +271,7 @@ router
   // 스터디 참여
   .post(async (req, res) => {
     if (!req.user)
-      return res.status(400).json({ message: 'no user in session' });
+      return res.status(401).json({ message: 'no user in session' });
     const t = await sequelize.transaction();
     const userId = req.user.id;
 
@@ -289,7 +289,7 @@ router
       // 이미 참여중인 경우 (already joined) 처리 필요
 
       if (newAmount < 0) {
-        res.status(400).json({ message: 'not enough points' });
+        res.status(402).json({ message: 'not enough points' });
       } else {
         await User.update(
           {
@@ -330,7 +330,7 @@ router
   // 스터디 멤버 조회
   .get(async (req, res) => {
     if (!req.user)
-      return res.status(400).json({ message: 'no user in session' });
+      return res.status(401).json({ message: 'no user in session' });
     try {
       const member = await StudyMember.findOne({
         where: { studyId: req.params.id, userId: req.user.id },
@@ -345,7 +345,7 @@ router
 
 // 스터디 멤버 중도포기
 router.route('/:id/member/drop').patch(async (req, res) => {
-  if (!req.user) return res.status(400).json({ message: 'no user in session' });
+  if (!req.user) return res.status(401).json({ message: 'no user in session' });
   const t = await sequelize.transaction();
   try {
     const userId = req.user.id;
@@ -385,7 +385,7 @@ router.route('/:id/member/drop').patch(async (req, res) => {
 
 // 스터디 종료 후 포인트 환급
 router.route('/:id/member/point').patch(async (req, res) => {
-  if (!req.user) return res.status(400).json({ message: 'no user in session' });
+  if (!req.user) return res.status(401).json({ message: 'no user in session' });
   const t = await sequelize.transaction();
   const userId = req.user.id;
   const studyId = req.params.id;

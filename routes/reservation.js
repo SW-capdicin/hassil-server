@@ -43,7 +43,7 @@ router.route('/history').get(async (req, res) => {
 
 // 출석 인증 API
 router.route('/:id/member/attendance').patch(async (req, res) => {
-  if (!req.user) return res.status(400).json({ message: 'no user in session' });
+  if (!req.user) return res.status(401).json({ message: 'no user in session' });
   const t = await sequelize.transaction();
   try {
     const userId = req.user.id;

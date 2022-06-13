@@ -8,7 +8,7 @@ const {
   StudyRoom,
   StudyCafe,
 } = require('../models');
-const createMailRequest = require('./createMailRequest');
+const createMailRequest = require('../libs/createMailRequest');
 
 router.route('/reservations').get(async (req, res) => {
   try {

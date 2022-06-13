@@ -1,5 +1,5 @@
 const express = require('express');
-const utils = require('./utils');
+const utils = require('../libs/utils');
 const {
   sequelize,
   Study,
@@ -14,7 +14,7 @@ const {
   StudyCafe,
 } = require('../models');
 const { Op } = require('sequelize');
-const createMailRequest = require('./createMailRequest');
+const createMailRequest = require('../libs/createMailRequest');
 
 const router = express.Router();
 

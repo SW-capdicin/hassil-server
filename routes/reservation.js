@@ -1,6 +1,6 @@
 const express = require('express');
 const moment = require('moment');
-const utils = require('./utils');
+const utils = require('../libs/utils');
 const {
   sequelize,
   StudyMember,

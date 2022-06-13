@@ -1,29 +1,31 @@
-const Sequelize = require("sequelize");
-const env = process.env.NODE_ENV || "development";
-const config = require("../config/config")[env];
+const Sequelize = require('sequelize');
+const env = process.env.NODE_ENV || 'development';
+const config = require('../config/dbConfig')[env];
 
-const User = require("./user");
-const StudyCafe = require("./studyCafe");
-const PointHistory = require("./pointHistory");
-const Answer = require("./answer");
-const Question = require("./question");
-const Notice = require("./notice");
-const Review = require("./review");
-const Study = require("./study");
-const Category = require("./category");
-const Comment = require("./comment");
-const StudyMember = require("./studyMember");
-const Reservation = require("./reservation");
-const StudyCafeImage = require("./studyCafeImage");
-const StudyRoom = require("./studyRoom");
-const StudyRoomSchedule = require("./studyRoomSchedule");
+const User = require('./user');
+const StudyCafe = require('./studyCafe');
+const PointHistory = require('./pointHistory');
+const Answer = require('./answer');
+const Question = require('./question');
+const Notice = require('./notice');
+const Review = require('./review');
+const Study = require('./study');
+const Category = require('./category');
+const Comment = require('./comment');
+const StudyMember = require('./studyMember');
+const Reservation = require('./reservation');
+const StudyCafeImage = require('./studyCafeImage');
+const StudyRoom = require('./studyRoom');
+const StudyRoomSchedule = require('./studyRoomSchedule');
+const Meeting = require('./meeting');
+const AttendHistory = require('./attendHistory');
 
 const db = {};
 const sequelize = new Sequelize(
-  config.databse,
+  config.database,
   config.username,
   config.password,
-  config
+  config,
 );
 
 db.sequelize = sequelize;
@@ -42,6 +44,8 @@ db.Reservation = Reservation;
 db.StudyCafeImage = StudyCafeImage;
 db.StudyRoom = StudyRoom;
 db.StudyRoomSchedule = StudyRoomSchedule;
+db.Meeting = Meeting;
+db.AttendHistory = AttendHistory;
 
 User.init(sequelize);
 StudyCafe.init(sequelize);
@@ -58,6 +62,8 @@ Reservation.init(sequelize);
 StudyCafeImage.init(sequelize);
 StudyRoom.init(sequelize);
 StudyRoomSchedule.init(sequelize);
+Meeting.init(sequelize);
+AttendHistory.init(sequelize);
 
 User.associate(db);
 StudyCafe.associate(db);
@@ -74,5 +80,7 @@ Reservation.associate(db);
 StudyCafeImage.associate(db);
 StudyRoom.associate(db);
 StudyRoomSchedule.associate(db);
+Meeting.associate(db);
+AttendHistory.associate(db);
 
 module.exports = db;

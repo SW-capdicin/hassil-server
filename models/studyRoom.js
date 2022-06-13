@@ -1,4 +1,4 @@
-const Sequelize = require("sequelize");
+const Sequelize = require('sequelize');
 
 module.exports = class StudyRoom extends Sequelize.Model {
   static init(sequelize) {
@@ -7,50 +7,66 @@ module.exports = class StudyRoom extends Sequelize.Model {
         id: {
           primaryKey: true,
           type: Sequelize.INTEGER.UNSIGNED,
+          autoIncrement: true,
           allowNull: false,
           unique: true,
         },
-        study_cafe_id: {
+        studyCafeId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: "study_cafe",
-            key: "id",
+            model: 'StudyCafe',
+            key: 'id',
           },
-          onDelete: "CASCADE",
+          onDelete: 'CASCADE',
         },
-        max_person: {
+        name: {
+          type: 'varchar(45)',
+          allowNull: true,
+        },
+        maxPerson: {
           type: Sequelize.INTEGER.UNSIGNED,
           allowNull: false,
         },
-        price_per_hour: {
+        pricePerHour: {
           type: Sequelize.INTEGER.UNSIGNED,
           allowNull: false,
         },
         src: {
-          type: "varchar(255)",
+          type: 'varchar(255)',
+          allowNull: true,
+        },
+        createdAt: {
+          type: Sequelize.DATE,
           allowNull: false,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
+        updatedAt: {
+          type: Sequelize.DATE,
+          allowNull: true,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         },
       },
       {
         sequelize,
-        timestamps: true,
-        underscored: true,
-        modelName: "StudyRoom",
-        tableName: "study_room",
-        paranoid: true,
-        charset: "utf8",
-        collate: "utf8_general_ci",
-      }
+        modelName: 'StudyRoom',
+        tableName: 'StudyRoom',
+        charset: 'utf8',
+        collate: 'utf8_general_ci',
+        initialAutoIncrement: 1,
+        timestamps: false,
+        paranoid: false,
+        underscored: false,
+      },
     );
   }
 
   static associate(db) {
     db.StudyRoom.belongsTo(db.StudyCafe, {
-      foreignKey: "study_cafe_id",
-      onDelete: "CASCADE",
+      foreignKey: 'studyCafeId',
+      onDelete: 'CASCADE',
     });
     db.StudyRoom.hasMany(db.StudyRoomSchedule, {
-      foreignKey: "studyroom_id",
+      foreignKey: 'studyRoomId',
     });
   }
 };

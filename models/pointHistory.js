@@ -1,4 +1,4 @@
-const Sequelize = require("sequelize");
+const Sequelize = require('sequelize');
 
 module.exports = class PointHistory extends Sequelize.Model {
   static init(sequelize) {
@@ -7,16 +7,16 @@ module.exports = class PointHistory extends Sequelize.Model {
         id: {
           primaryKey: true,
           type: Sequelize.INTEGER.UNSIGNED,
+          autoIncrement: true,
           allowNull: false,
           unique: true,
         },
-        user_id: {
+        userId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: "user",
-            key: "id",
+            model: 'User',
+            key: 'id',
           },
-          //   onDelete: "CASCADE",
         },
         balance: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -30,24 +30,38 @@ module.exports = class PointHistory extends Sequelize.Model {
           type: Sequelize.TINYINT,
           allowNull: false,
         },
+        content: {
+          type: 'varchar(255)',
+          allowNull: true,
+        },
+        createdAt: {
+          type: Sequelize.DATE,
+          allowNull: false,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
+        updatedAt: {
+          type: Sequelize.DATE,
+          allowNull: true,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
       },
       {
         sequelize,
-        timestamps: true,
-        underscored: true,
-        modelName: "PointHistory",
-        tableName: "point_history",
-        paranoid: true,
-        charset: "utf8",
-        collate: "utf8_general_ci",
-      }
+        modelName: 'PointHistory',
+        tableName: 'PointHistory',
+        charset: 'utf8',
+        collate: 'utf8_general_ci',
+        initialAutoIncrement: 1,
+        timestamps: false,
+        paranoid: false,
+        underscored: false,
+      },
     );
   }
 
   static associate(db) {
     db.PointHistory.belongsTo(db.User, {
-      foreignKey: "user_id",
-      //   onDelete: "CASCADE",
+      foreignKey: 'userId',
     });
   }
 };

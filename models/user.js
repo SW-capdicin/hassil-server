@@ -1,4 +1,4 @@
-const Sequelize = require("sequelize");
+const Sequelize = require('sequelize');
 
 module.exports = class User extends Sequelize.Model {
   static init(sequelize) {
@@ -7,24 +7,25 @@ module.exports = class User extends Sequelize.Model {
         id: {
           primaryKey: true,
           type: Sequelize.INTEGER.UNSIGNED,
+          autoIncrement: true,
           allowNull: false,
           unique: true,
         },
         email: {
-          type: "varchar(45)",
-          allowNull: false,
+          type: 'varchar(45)',
+          allowNull: true,
         },
         pid: {
-          type: "varchar(45)",
+          type: 'varchar(45)',
           allowNull: false,
         },
         nickname: {
-          type: "varchar(45)",
-          allowNull: false,
+          type: 'varchar(45)',
+          allowNull: true,
         },
-        phone_number: {
-          type: "varchar(45)",
-          allowNull: false,
+        phoneNumber: {
+          type: 'varchar(45)',
+          allowNull: true,
         },
         point: {
           type: Sequelize.INTEGER.UNSIGNED,
@@ -32,62 +33,73 @@ module.exports = class User extends Sequelize.Model {
         },
         type: {
           type: Sequelize.INTEGER.UNSIGNED,
-          allowNull: false,
+          allowNull: true,
         },
         name: {
-          type: "varchar(45)",
-          allowNull: false,
+          type: 'varchar(45)',
+          allowNull: true,
         },
-        bank_name: {
-          type: "varchar(45)",
-          allowNull: false,
+        bankName: {
+          type: 'varchar(45)',
+          allowNull: true,
         },
-        bank_account: {
-          type: "varchar(45)",
-          allowNull: false,
+        bankAccount: {
+          type: 'varchar(45)',
+          allowNull: true,
         },
         src: {
-          type: "varchar(255)",
+          type: 'varchar(255)',
+          allowNull: true,
+        },
+        createdAt: {
+          type: Sequelize.DATE,
           allowNull: false,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
+        updatedAt: {
+          type: Sequelize.DATE,
+          allowNull: true,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         },
       },
       {
         sequelize,
-        timestamps: true,
-        underscored: true,
-        modelName: "User",
-        tableName: "user",
-        paranoid: true,
-        charset: "utf8",
-        collate: "utf8_general_ci",
-      }
+        modelName: 'User',
+        tableName: 'User',
+        charset: 'utf8',
+        collate: 'utf8_general_ci',
+        initialAutoIncrement: 1,
+        timestamps: false,
+        paranoid: false,
+        underscored: false,
+      },
     );
   }
 
   static associate(db) {
     db.User.hasMany(db.StudyCafe, {
-      foreignKey: "user_id",
+      foreignKey: 'userId',
     });
     db.User.hasMany(db.Review, {
-      foreignKey: "user_id",
+      foreignKey: 'userId',
     });
     db.User.hasMany(db.Notice, {
-      foreignKey: "user_id",
+      foreignKey: 'userId',
     });
     db.User.hasMany(db.Question, {
-      foreignKey: "user_id",
+      foreignKey: 'userId',
     });
     db.User.hasMany(db.Answer, {
-      foreignKey: "user_id",
+      foreignKey: 'userId',
     });
     db.User.hasMany(db.StudyMember, {
-      foreignKey: "user_id",
+      foreignKey: 'userId',
     });
     db.User.hasMany(db.Comment, {
-      foreignKey: "user_id",
+      foreignKey: 'userId',
     });
     db.User.hasMany(db.PointHistory, {
-      foreignKey: "user_id",
+      foreignKey: 'userId',
     });
   }
 };

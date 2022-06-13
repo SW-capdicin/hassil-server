@@ -1,4 +1,4 @@
-const Sequelize = require("sequelize");
+const Sequelize = require('sequelize');
 
 module.exports = class StudyRoomSchedule extends Sequelize.Model {
   static init(sequelize) {
@@ -7,55 +7,67 @@ module.exports = class StudyRoomSchedule extends Sequelize.Model {
         id: {
           primaryKey: true,
           type: Sequelize.INTEGER.UNSIGNED,
+          autoIncrement: true,
           allowNull: false,
           unique: true,
         },
-        reservation_id: {
+        reservationId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: "reservation",
-            key: "id",
+            model: 'Reservation',
+            key: 'id',
           },
-          onDelete: "CASCADE",
+          onDelete: 'CASCADE',
         },
-        studyroom_id: {
+        studyRoomId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: "study_room",
-            key: "id",
+            model: 'StudyRoom',
+            key: 'id',
           },
-          onDelete: "CASCADE",
+          onDelete: 'CASCADE',
         },
-        time: {
-          type: "datetime",
+        datetime: {
+          type: 'datetime',
           allowNull: false,
         },
         status: {
           type: Sequelize.INTEGER.UNSIGNED,
           allowNull: false,
         },
+        createdAt: {
+          type: Sequelize.DATE,
+          allowNull: false,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
+        updatedAt: {
+          type: Sequelize.DATE,
+          allowNull: true,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
       },
       {
         sequelize,
-        timestamps: true,
-        underscored: true,
-        modelName: "StudyRoomSchedule",
-        tableName: "study_room_schedule",
-        paranoid: true,
-        charset: "utf8",
-        collate: "utf8_general_ci",
-      }
+        modelName: 'StudyRoomSchedule',
+        tableName: 'StudyRoomSchedule',
+        charset: 'utf8',
+        collate: 'utf8_general_ci',
+        initialAutoIncrement: 1,
+        timestamps: false,
+        paranoid: false,
+        underscored: false,
+      },
     );
   }
 
   static associate(db) {
     db.StudyRoomSchedule.belongsTo(db.StudyRoom, {
-      foreignKey: "studyroom_id",
-      onDelete: "CASCADE",
+      foreignKey: 'studyRoomId',
+      onDelete: 'CASCADE',
     });
     db.StudyRoomSchedule.belongsTo(db.Reservation, {
-      foreignKey: "reservation_id",
-      onDelete: "CASCADE",
+      foreignKey: 'reservationId',
+      onDelete: 'CASCADE',
     });
   }
 };

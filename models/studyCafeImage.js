@@ -1,4 +1,4 @@
-const Sequelize = require("sequelize");
+const Sequelize = require('sequelize');
 
 module.exports = class StudyCafeImage extends Sequelize.Model {
   static init(sequelize) {
@@ -7,39 +7,51 @@ module.exports = class StudyCafeImage extends Sequelize.Model {
         id: {
           primaryKey: true,
           type: Sequelize.INTEGER.UNSIGNED,
+          autoIncrement: true,
           allowNull: false,
           unique: true,
         },
-        study_cafe_id: {
+        studyCafeId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: "study_cafe",
-            key: "id",
+            model: 'StudyCafe',
+            key: 'id',
           },
-          onDelete: "CASCADE",
+          onDelete: 'CASCADE',
         },
         src: {
-          type: "varchar(255)",
+          type: 'varchar(255)',
           allowNull: false,
+        },
+        createdAt: {
+          type: Sequelize.DATE,
+          allowNull: false,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
+        updatedAt: {
+          type: Sequelize.DATE,
+          allowNull: true,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         },
       },
       {
         sequelize,
-        timestamps: true,
-        underscored: true,
-        modelName: "StudyCafeImage",
-        tableName: "study_cafe_image",
-        paranoid: true,
-        charset: "utf8",
-        collate: "utf8_general_ci",
-      }
+        modelName: 'StudyCafeImage',
+        tableName: 'StudyCafeImage',
+        charset: 'utf8',
+        collate: 'utf8_general_ci',
+        initialAutoIncrement: 1,
+        timestamps: false,
+        paranoid: false,
+        underscored: false,
+      },
     );
   }
 
   static associate(db) {
     db.StudyCafeImage.belongsTo(db.StudyCafe, {
-      foreignKey: "study_cafe_id",
-      onDelete: "CASCADE",
+      foreignKey: 'studyCafeId',
+      onDelete: 'CASCADE',
     });
   }
 };

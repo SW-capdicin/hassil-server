@@ -1,4 +1,4 @@
-const Sequelize = require("sequelize");
+const Sequelize = require('sequelize');
 
 module.exports = class StudyMember extends Sequelize.Model {
   static init(sequelize) {
@@ -7,59 +7,74 @@ module.exports = class StudyMember extends Sequelize.Model {
         id: {
           primaryKey: true,
           type: Sequelize.INTEGER.UNSIGNED,
+          autoIncrement: true,
           allowNull: false,
           unique: true,
         },
-        study_id: {
+        studyId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: "study",
-            key: "id",
+            model: 'Study',
+            key: 'id',
           },
-          onDelete: "CASCADE",
+          onDelete: 'CASCADE',
         },
-        user_id: {
+        userId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: "user",
-            key: "id",
+            model: 'User',
+            key: 'id',
           },
-          onDelete: "CASCADE",
+          onDelete: 'CASCADE',
         },
-        late_cnt: {
+        attendCnt: {
           type: Sequelize.INTEGER.UNSIGNED,
           defaultValue: 0,
         },
-        absent_cnt: {
+        lateCnt: {
           type: Sequelize.INTEGER.UNSIGNED,
           defaultValue: 0,
         },
-        is_alive: {
+        isAlive: {
           type: Sequelize.INTEGER.UNSIGNED,
           defaultValue: 1,
+        },
+        createdAt: {
+          type: Sequelize.DATE,
+          allowNull: false,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
+        updatedAt: {
+          type: Sequelize.DATE,
+          allowNull: true,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         },
       },
       {
         sequelize,
-        timestamps: true,
-        underscored: true,
-        modelName: "StudyMember",
-        tableName: "study_member",
-        paranoid: true,
-        charset: "utf8",
-        collate: "utf8_general_ci",
-      }
+        modelName: 'StudyMember',
+        tableName: 'StudyMember',
+        charset: 'utf8',
+        collate: 'utf8_general_ci',
+        initialAutoIncrement: 1,
+        timestamps: false,
+        paranoid: false,
+        underscored: false,
+      },
     );
   }
 
   static associate(db) {
     db.StudyMember.belongsTo(db.User, {
-      foreignKey: "user_id",
-      onDelete: "CASCADE",
+      foreignKey: 'userId',
+      onDelete: 'CASCADE',
     });
     db.StudyMember.belongsTo(db.Study, {
-      foreignKey: "study_id",
-      onDelete: "CASCADE",
+      foreignKey: 'studyId',
+      onDelete: 'CASCADE',
+    });
+    db.StudyMember.hasMany(db.AttendHistory, {
+      foreignKey: 'studyMemberId',
     });
   }
 };

@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize');
 
-module.exports = class Answer extends Sequelize.Model {
+module.exports = class AttendHistory extends Sequelize.Model {
   static init(sequelize) {
     return super.init(
       {
@@ -11,24 +11,24 @@ module.exports = class Answer extends Sequelize.Model {
           allowNull: false,
           unique: true,
         },
-        userId: {
+        reservationId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: 'User',
-            key: 'id',
-          },
-          //   onDelete: "CASCADE",
-        },
-        questionId: {
-          type: Sequelize.INTEGER.UNSIGNED,
-          references: {
-            model: 'Question',
+            model: 'Reservation',
             key: 'id',
           },
           onDelete: 'CASCADE',
         },
-        contents: {
-          type: 'varchar(255)',
+        studyMemberId: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          references: {
+            model: 'StudyMember',
+            key: 'id',
+          },
+          onDelete: 'CASCADE',
+        },
+        status: {
+          type: Sequelize.INTEGER.UNSIGNED,
           allowNull: false,
         },
         createdAt: {
@@ -44,8 +44,8 @@ module.exports = class Answer extends Sequelize.Model {
       },
       {
         sequelize,
-        modelName: 'Answer',
-        tableName: 'Answer',
+        modelName: 'AttendHistory',
+        tableName: 'AttendHistory',
         charset: 'utf8',
         collate: 'utf8_general_ci',
         initialAutoIncrement: 1,
@@ -57,12 +57,12 @@ module.exports = class Answer extends Sequelize.Model {
   }
 
   static associate(db) {
-    db.Answer.belongsTo(db.User, {
-      foreignKey: 'userId',
-      //   onDelete: "CASCADE",
+    db.AttendHistory.belongsTo(db.Reservation, {
+      foreignKey: 'reservationId',
+      onDelete: 'CASCADE',
     });
-    db.Answer.belongsTo(db.Question, {
-      foreignKey: 'questionId',
+    db.AttendHistory.belongsTo(db.StudyMember, {
+      foreignKey: 'studyMemberId',
       onDelete: 'CASCADE',
     });
   }

@@ -1,4 +1,4 @@
-const Sequelize = require("sequelize");
+const Sequelize = require('sequelize');
 
 module.exports = class Reservation extends Sequelize.Model {
   static init(sequelize) {
@@ -7,54 +7,80 @@ module.exports = class Reservation extends Sequelize.Model {
         id: {
           primaryKey: true,
           type: Sequelize.INTEGER.UNSIGNED,
+          autoIncrement: true,
           allowNull: false,
           unique: true,
         },
-        study_id: {
+        studyId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: "study",
-            key: "id",
+            model: 'Study',
+            key: 'id',
           },
-          onDelete: "CASCADE",
+          onDelete: 'CASCADE',
         },
-        reservation_person_name: {
-          type: "varchar(45)",
-          allowNull: false,
+        reservatingUserId: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          references: {
+            model: 'User',
+            key: 'id',
+          },
+          onDelete: 'CASCADE',
         },
         status: {
           type: Sequelize.INTEGER.UNSIGNED,
           defaultValue: 0,
         },
-        longitude: {
-          type: "varchar(45)",
-          // allowNull: false,
+        personCnt: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          defaultValue: 0,
         },
-        latitude: {
-          type: "varchar(45)",
-          // allowNull: false,
+        attendCnt: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          defaultValue: 0,
+        },
+        lateCnt: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          defaultValue: 0,
+        },
+        createdAt: {
+          type: Sequelize.DATE,
+          allowNull: false,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
+        updatedAt: {
+          type: Sequelize.DATE,
+          allowNull: true,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         },
       },
       {
         sequelize,
-        timestamps: true,
-        underscored: true,
-        modelName: "Reservation",
-        tableName: "reservation",
-        paranoid: true,
-        charset: "utf8",
-        collate: "utf8_general_ci",
-      }
+        modelName: 'Reservation',
+        tableName: 'Reservation',
+        charset: 'utf8',
+        collate: 'utf8_general_ci',
+        initialAutoIncrement: 1,
+        timestamps: false,
+        paranoid: false,
+        underscored: false,
+      },
     );
   }
 
   static associate(db) {
-    db.Reservation.belongsTo(db.Study, {
-      foreignKey: "study_id",
-      onDelete: "CASCADE",
-    });
     db.Reservation.hasMany(db.StudyRoomSchedule, {
-      foreignKey: "reservation_id",
+      foreignKey: 'reservationId',
+    });
+    db.Reservation.belongsTo(db.Study, {
+      foreignKey: 'studyId',
+      onDelete: 'CASCADE',
+    });
+    db.Reservation.hasOne(db.Meeting, {
+      foreignKey: 'reservationId',
+    });
+    db.Reservation.hasMany(db.AttendHistory, {
+      foreignKey: 'reservationId',
     });
   }
 };

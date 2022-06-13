@@ -1,4 +1,4 @@
-const Sequelize = require("sequelize");
+const Sequelize = require('sequelize');
 
 module.exports = class Study extends Sequelize.Model {
   static init(sequelize) {
@@ -7,96 +7,112 @@ module.exports = class Study extends Sequelize.Model {
         id: {
           primaryKey: true,
           type: Sequelize.INTEGER.UNSIGNED,
+          autoIncrement: true,
           allowNull: false,
           unique: true,
         },
-        category_id: {
+        categoryId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: "category",
-            key: "id",
+            model: 'Category',
+            key: 'id',
           },
-          onDelete: "CASCADE",
+          onDelete: 'CASCADE',
         },
         name: {
-          type: "varchar(45)",
+          type: 'varchar(45)',
           allowNull: false,
         },
         info: {
-          type: "longtext",
+          type: 'longtext',
           allowNull: false,
         },
-        meeting_cnt: {
+        meetingCnt: {
           type: Sequelize.INTEGER.UNSIGNED,
           defaultValue: 0,
         },
-        start_date: {
+        startDate: {
           type: Sequelize.DATEONLY,
           allowNull: false,
         },
-        end_date: {
+        endDate: {
           type: Sequelize.DATEONLY,
           allowNull: false,
         },
-        deposit_per_person: {
+        depositPerPerson: {
           type: Sequelize.INTEGER.UNSIGNED,
           allowNull: false,
         },
         location: {
-          type: "varchar(255)",
+          type: 'varchar(255)',
+          allowNull: true,
+        },
+        operationTime: {
+          type: 'varchar(255)',
           allowNull: false,
         },
-        operation_time: {
-          type: "varchar(255)",
-          allowNull: false,
-        },
-        min_person: {
+        minPerson: {
           type: Sequelize.INTEGER.UNSIGNED,
           allowNull: false,
         },
-        max_person: {
+        maxPerson: {
           type: Sequelize.INTEGER.UNSIGNED,
           allowNull: false,
         },
-        absent_fee: {
+        absentFee: {
           type: Sequelize.INTEGER.UNSIGNED,
           allowNull: false,
         },
-        late_fee: {
+        lateFee: {
           type: Sequelize.INTEGER.UNSIGNED,
           allowNull: false,
         },
         src: {
-          type: "varchar(255)",
+          type: 'varchar(255)',
+          allowNull: true,
+        },
+        rewardSum: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          defaultValue: 0,
+        },
+        createdAt: {
+          type: Sequelize.DATE,
           allowNull: false,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
+        updatedAt: {
+          type: Sequelize.DATE,
+          allowNull: true,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         },
       },
       {
         sequelize,
-        timestamps: true,
-        underscored: true,
-        modelName: "Study",
-        tableName: "study",
-        paranoid: true,
-        charset: "utf8",
-        collate: "utf8_general_ci",
-      }
+        modelName: 'Study',
+        tableName: 'Study',
+        charset: 'utf8',
+        collate: 'utf8_general_ci',
+        initialAutoIncrement: 1,
+        timestamps: false,
+        paranoid: false,
+        underscored: false,
+      },
     );
   }
 
   static associate(db) {
     db.Study.hasMany(db.StudyMember, {
-      foreignKey: "study_id",
+      foreignKey: 'studyId',
     });
     db.Study.hasMany(db.Comment, {
-      foreignKey: "study_id",
+      foreignKey: 'studyId',
     });
     db.Study.hasMany(db.Reservation, {
-      foreignKey: "study_id",
+      foreignKey: 'studyId',
     });
     db.Study.belongsTo(db.Category, {
-      foreignKey: "category_id",
-      onDelete: "CASCADE",
+      foreignKey: 'categoryId',
+      onDelete: 'CASCADE',
     });
   }
 };

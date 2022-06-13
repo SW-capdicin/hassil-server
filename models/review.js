@@ -1,4 +1,4 @@
-const Sequelize = require("sequelize");
+const Sequelize = require('sequelize');
 
 module.exports = class Review extends Sequelize.Model {
   static init(sequelize) {
@@ -7,55 +7,67 @@ module.exports = class Review extends Sequelize.Model {
         id: {
           primaryKey: true,
           type: Sequelize.INTEGER.UNSIGNED,
+          autoIncrement: true,
           allowNull: false,
           unique: true,
         },
-        study_cafe_id: {
+        studyCafeId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: "study_cafe",
-            key: "id",
+            model: 'StudyCafe',
+            key: 'id',
           },
-          onDelete: "CASCADE",
+          onDelete: 'CASCADE',
         },
-        user_id: {
+        userId: {
           type: Sequelize.INTEGER.UNSIGNED,
           references: {
-            model: "user",
-            key: "id",
+            model: 'User',
+            key: 'id',
           },
-          onDelete: "CASCADE",
+          onDelete: 'CASCADE',
         },
         contents: {
-          type: "varchar(255)",
+          type: 'varchar(255)',
           allowNull: false,
         },
         rating: {
           type: Sequelize.INTEGER.UNSIGNED,
           allowNull: false,
         },
+        createdAt: {
+          type: Sequelize.DATE,
+          allowNull: false,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
+        updatedAt: {
+          type: Sequelize.DATE,
+          allowNull: true,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
       },
       {
         sequelize,
-        timestamps: true,
-        underscored: true,
-        modelName: "Review",
-        tableName: "review",
-        paranoid: true,
-        charset: "utf8",
-        collate: "utf8_general_ci",
-      }
+        modelName: 'Review',
+        tableName: 'Review',
+        charset: 'utf8',
+        collate: 'utf8_general_ci',
+        initialAutoIncrement: 1,
+        timestamps: false,
+        paranoid: false,
+        underscored: false,
+      },
     );
   }
 
   static associate(db) {
     db.Review.belongsTo(db.User, {
-      foreignKey: "user_id",
-      onDelete: "CASCADE",
+      foreignKey: 'userId',
+      onDelete: 'CASCADE',
     });
     db.Review.belongsTo(db.StudyCafe, {
-      foreignKey: "study_cafe_id",
-      onDelete: "CASCADE",
+      foreignKey: 'studyCafeId',
+      onDelete: 'CASCADE',
     });
   }
 };

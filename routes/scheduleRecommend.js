@@ -199,7 +199,6 @@ async function getNumber2Path(
       await getMinimalCostPath(radius, startTime, endTime, longitude, latitude);
       if (minCostPath.length == timeblocks) {
         number2Path = minCostPath;
-        // break; // 왜 이걸 주석 처리하면 잘 될까??
       }
     } else if (option == 1) {
       await getMinimalMovingPath(
@@ -211,7 +210,6 @@ async function getNumber2Path(
       );
       if (minMovingPath.length == timeblocks) {
         number2Path = minMovingPath;
-        // break; // 왜 이걸 주석 처리하면 잘 될까??
       }
     }
     startTime.subtract(timeDiff[i], 'hours');

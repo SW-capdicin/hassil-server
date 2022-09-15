@@ -49,8 +49,8 @@ router.route('/:id/member/attendance').patch(async (req, res) => {
     const userId = req.user.id;
     const reservationId = req.params.id;
 
-    const distErrRange = 1000; // 거리 오차 범위 (출석 허용 거리차) (단위 : m)
-    const lateRange = 30; // 지각 기준(단위 : 분)
+    const distErrRange = 50; // 거리 오차 범위 (출석 허용 거리차) (단위 : m)
+    const lateRange = 10; // 지각 기준(단위 : 분)
     let result = ''; // 출석 결과 (pass / late / fail)
 
     const currentLatitude = req.body.latitude; // 현재 latitude
